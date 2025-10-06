@@ -1,32 +1,38 @@
-name: 🚀 Deploy Laravel ke Niagahoster
+name: Deploy Laravel to Niagahoster
 
 on:
   push:
-    branches:
-      - main  # ubah jika branch utama kamu berbeda
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  ftp-deploy:
-    name: 📦 Upload ke FTP Server
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout kode
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Sync files ke Niagahoster via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Install PHP dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies and build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Niagahoster via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_PATH }}
-          local-dir: ./  # folder lokal yang diupload
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: domains/halzea.fudge.web.id/public_html/   # ⬅️ ini arahkan langsung ke root laravel kamu
           exclude: |
-            **/.git*
-            **/.github*
-            **/node_modules/**
-            **/vendor/**
-            storage/**
-            .env
+            .git*
+            .github*
+            node_modules/
+            tests/
+            storage/logs/
