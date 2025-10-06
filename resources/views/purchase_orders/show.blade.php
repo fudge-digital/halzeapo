@@ -325,7 +325,6 @@
         </form>
     </div>
 
-    
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const productionSelect = document.getElementById('production_status');
