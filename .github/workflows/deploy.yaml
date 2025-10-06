@@ -22,7 +22,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./
-          server-dir: /   # ⬅️ ini arahkan langsung ke root laravel kamu
+          server-dir: public_html/   # ⬅️ ini arahkan langsung ke root laravel kamu
           exclude: |
             .git*
             .github*
