@@ -2,8 +2,8 @@ name: Deploy Laravel to Niagahoster
 
 on:
   push:
-    branches: 
-    - main
+    branches:
+      - main  # atau dev kalau mau untuk branch dev dulu
 
 jobs:
   deploy:
@@ -13,12 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Node modules & build assets
+      - name: Build frontend assets
         run: |
           npm ci
           npm run build
@@ -29,14 +37,18 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: /public_html/   # ⬅️ ini arahkan langsung ke root laravel kamu
+          server-dir: /public_html/
           exclude: |
-            .git*
-            .github*
-            node_modules/
-            tests/
-            storage/logs/
-            .env
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/storage/**
+            **/tests/**
+            **/docker/**
+            **/vendor/**
+            **/package*.json
+            **/vite.config.*
+            **/README.md
+            **/.env
           dangerous-clean-slate: false
           state-name: .ftp-deploy-sync-state.json
