@@ -115,6 +115,7 @@
                             <td class="px-3 py-2 border text-right">Rp {{ number_format($item->total_harga_jual, 0, ',', '.') }}</td>
                             @endif
                         </tr>
+                        
                         @if($item->po_press || $item->po_print || $item->po_press_print)
                         <tr class="bg-gray-50 text-xs text-gray-600">
                             <td colspan="10" class="px-3 py-2 border">
