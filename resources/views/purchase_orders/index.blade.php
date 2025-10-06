@@ -28,6 +28,7 @@
                 <tr class="bg-gray-100 text-gray-700 text-sm tracking-wide">
                     <th class="px-4 py-3 text-left">PO Dibuat</th>
                     <th class="px-4 py-3 text-left">Customer</th>
+                    <th class="px-4 py-3 text-left">Tempat Produksi</th>
                     <th class="px-4 py-3 text-left">No SPK</th>
                     <th class="px-4 py-3 text-left">Dibuat Oleh</th>
                     <th class="px-4 py-3 text-left">Status Finance</th>
@@ -41,6 +42,7 @@
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-4 py-3">{{ $po->create ?? $po->created_at->format('d-m-Y') }}</td>
                         <td class="px-4 py-3 font-medium text-gray-800">{{ $po->customer }}</td>
+                        <td class="px-4 py-3">{{ $po->tempat_produksi ?? 'N/A' }}</td>
                         <td class="px-4 py-3">{{ $po->no_spk ?? '-' }}</td>
                         <td class="px-4 py-3">{{ $po->creator->name }}</td>
                         <td class="px-4 py-3">

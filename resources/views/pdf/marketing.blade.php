@@ -20,7 +20,8 @@
     <p><strong>No SPK:</strong> {{ $po->no_spk ?? '-' }}</p>
     <p><strong>No Invoice:</strong> {{ $po->no_invoice ?? '-' }}</p>
     <p><strong>Status Finance:</strong> {{ str_replace('_', ' ', $po->status) ?? '-' }}</p>
-    <p><strong>Customer:</strong> {{ $po->customer }}</p>
+    <p><strong>Customer:</strong> {{ $po->customer ?? 'N/A' }}</p>
+    <p><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
 
     <table>
         <colgroup>

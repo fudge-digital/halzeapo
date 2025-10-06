@@ -24,6 +24,7 @@
     <p><strong>Alamat Pengiriman:</strong> {{ $po->alamat_pengiriman ?? '-' }}</p>
 
     <p style="text-align:right;"><strong>Customer:</strong> {{ $po->customer }}</p>
+    <p style="text-align:right;"><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
 
     <table>
         <colgroup>
