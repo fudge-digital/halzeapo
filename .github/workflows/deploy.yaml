@@ -1,0 +1,31 @@
+name: 🚀 Deploy Laravel ke Niagahoster
+
+on:
+  push:
+    branches:
+      - main  # ubah jika branch utama kamu berbeda
+
+jobs:
+  ftp-deploy:
+    name: 📦 Upload ke FTP Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v3
+
+      - name: Sync files ke Niagahoster via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_PATH }}
+          local-dir: ./  # folder lokal yang diupload
+          exclude: |
+            **/.git*
+            **/.github*
+            **/node_modules/**
+            **/vendor/**
+            storage/**
+            .env
