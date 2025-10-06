@@ -13,12 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 📦 Install dependencies & build assets
-        run: |
-          composer install --no-dev --optimize-autoloader
-          npm ci
-          npm run build
-
       - name: Deploy to Niagahoster via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
