@@ -19,6 +19,12 @@
             <input type="text" name="customer" id="customer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('customer') }}" required>
         </div>
 
+        {{-- Customer --}}
+        <div>
+            <label for="tempat_produksi" class="block text-sm font-medium text-gray-700">Tempat Produksi</label>
+            <input type="text" name="tempat_produksi" id="tempat_produksi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('tempat_produksi') }}" required>
+        </div>
+
         {{-- Repeater Items --}}
         <div>
             <h2 class="text-lg font-semibold mb-2">Detail Produksi</h2>

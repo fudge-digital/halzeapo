@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Node modules & build assets
+        run: |
+          npm ci
+          npm run build
 
       - name: Deploy to Niagahoster via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

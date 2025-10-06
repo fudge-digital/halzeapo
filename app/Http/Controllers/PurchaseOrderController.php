@@ -52,6 +52,7 @@ class PurchaseOrderController extends Controller
 
         $headerRules = [
             'customer' => 'required|string|max:255',
+            'tempat_produksi' => 'nullable|string|max:255',
             'down_payment' => 'nullable|numeric',
         ];
 
@@ -73,6 +74,7 @@ class PurchaseOrderController extends Controller
         try {
             $po->update([
                 'customer' => $request->input('customer'),
+                'tempat_produksi' => $request->input('tempat_produksi', $po->tempat_produksi),
                 'down_payment' => $request->input('down_payment', $po->down_payment),
             ]);
 
@@ -120,6 +122,7 @@ class PurchaseOrderController extends Controller
         // header validation
         $headerRules = [
             'customer' => 'required|string|max:255',
+            'tempat_produksi' => 'nullable|string|max:255',
             'no_spk' => 'nullable|string|max:255',
             'down_payment' => 'nullable|numeric',
             // sisa_pembayaran optional; server akan hitung ulang
@@ -162,6 +165,7 @@ class PurchaseOrderController extends Controller
             $po = PurchaseOrder::create([
                 'no_spk' => $no_spk,
                 'customer' => $request->input('customer'),
+                'tempat_produksi' => $request->input('tempat_produksi'),
                 'down_payment' => $request->input('down_payment', 0),
                 'sisa_pembayaran' => 0, // akan diupdate setelah hitung totals
                 'status' => PurchaseOrder::STATUS_PENDING,

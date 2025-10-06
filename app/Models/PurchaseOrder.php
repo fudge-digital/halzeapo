@@ -21,6 +21,7 @@ class PurchaseOrder extends Model
     protected $fillable = [
         'no_spk',
         'customer',
+        'tempat_produksi',
         'total_hpp',
         'total_harga_jual',
         'down_payment',

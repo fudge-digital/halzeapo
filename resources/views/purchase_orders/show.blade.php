@@ -21,6 +21,7 @@
                 <h1 class="text-xl font-bold">Purchase Order</h1>
                 <p class="text-gray-500 text-sm">Nomor SPK: {{ $po->no_spk }}</p>
                 <p class="text-gray-500 text-sm">Customer: <span class="font-medium">{{ $po->customer }}</span></p>
+                <p class="text-gray-500 text-sm">Tempat Produksi: <span class="font-medium">{{ $po->tempat_produksi ?? 'N/A' }}</span></p>
             </div>
             <div>
                 <div>
@@ -325,7 +326,7 @@
         </form>
     </div>
 
-    
+
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
