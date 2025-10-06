@@ -2,7 +2,8 @@ name: Deploy Laravel to Niagahoster
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+    - main
 
 jobs:
   deploy:
@@ -11,14 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install PHP dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
-
-      - name: Install Node dependencies and build assets
-        run: |
-          npm ci
-          npm run build
 
       - name: Deploy to Niagahoster via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
