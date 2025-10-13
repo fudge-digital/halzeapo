@@ -159,13 +159,47 @@
         {{-- DP & Sisa Pembayaran --}}
         <div class="grid grid-cols-2 gap-6 mt-6">
             <div>
+                <label class="block text-sm font-medium">Tipe Down Payment</label>
+                <select x-model="dpType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="nominal">Nominal (Rp)</option>
+                    <option value="persen">Persentase (%)</option>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-sm font-medium">Down Payment</label>
-                <input type="number" step="0.01" x-model="downPayment" name="down_payment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <input type="number" step="0.01" x-model="downPayment" name="down_payment"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+        </div>
+
+        {{-- Total & Sisa Pembayaran --}}
+        <div class="grid grid-cols-2 gap-6 mt-4">
+            <div>
+                <label class="block text-sm font-medium">Total HPP</label>
+                <input type="text" x-model="totalHPPDisplay"
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
             </div>
             <div>
-                <label class="block text-sm font-medium">Sisa Pembayaran</label>
-                <input type="text" x-model="sisaPembayaranDisplay" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
-                <input type="hidden" name="sisa_pembayaran" :value="sisaPembayaran">
+                <label class="block text-sm font-medium">Total Harga Jual</label>
+                <input type="text" x-model="totalHargaJualDisplay"
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6 mt-4">
+            <div>
+                <label class="block text-sm font-medium">Sisa Pembayaran (HPP)</label>
+                <input type="text" x-model="sisaHPPDisplay"
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                <input type="hidden" name="sisa_pembayaran_hpp" :value="sisaHPP">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium">Sisa Pembayaran (Harga Jual)</label>
+                <input type="text" x-model="sisaHargaJualDisplay"
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                <input type="hidden" name="sisa_pembayaran_hargajual" :value="sisaHargaJual">
             </div>
         </div>
 
@@ -249,15 +283,54 @@ function purchaseOrderForm() {
                 return sum + (Number(item.quantity) * Number(item.harga_jual || 0));
             }, 0);
         },
-        get sisaPembayaran() {
-            return this.totalHPPAll - Number(this.downPayment || 0);
+        
+        dpType: 'nominal',
+        downPayment: 0,
+
+        get totalHPPAll() {
+            return this.items.reduce((sum, item) => {
+                return sum + (Number(item.quantity) * Number(item.harga_pokok_penjualan || 0));
+            }, 0);
         },
-        get sisaPembayaranDisplay() {
-            return this.sisaPembayaran.toLocaleString("id-ID", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+        get totalHargaJualAll() {
+            return this.items.reduce((sum, item) => {
+                return sum + (Number(item.quantity) * Number(item.harga_jual || 0));
+            }, 0);
+        },
+
+        get downPaymentHPP() {
+            if (this.dpType === 'persen') {
+                return (this.totalHPPAll * (this.downPayment / 100)) || 0;
+            }
+            return Number(this.downPayment || 0);
+        },
+        get downPaymentHargaJual() {
+            if (this.dpType === 'persen') {
+                return (this.totalHargaJualAll * (this.downPayment / 100)) || 0;
+            }
+            return Number(this.downPayment || 0);
+        },
+
+        get sisaHPP() {
+            return Math.max(this.totalHPPAll - this.downPaymentHPP, 0);
+        },
+        get sisaHargaJual() {
+            return Math.max(this.totalHargaJualAll - this.downPaymentHargaJual, 0);
+        },
+
+        get totalHPPDisplay() {
+            return this.totalHPPAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get totalHargaJualDisplay() {
+            return this.totalHargaJualAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get sisaHPPDisplay() {
+            return this.sisaHPP.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+        get sisaHargaJualDisplay() {
+            return this.sisaHargaJual.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
+
     }
 }
 </script>
