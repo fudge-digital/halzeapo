@@ -8,14 +8,14 @@
             <a href="{{ route('purchase-orders.index') }}" class="px-4 py-2 bg-gray-500 rounded-lg text-sm text-white">Kembali</a>
         </div>
         <div>
-            @if(Auth::user()->role === 'MARKETING')
-            <!-- <a href="{{ route('purchase-orders.export.pdf', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2">
+            @if(Auth::user()->role === 'MARKETING' && $po->status === 'APPROVED_FINANCE')
+            <a href="{{ route('purchase-orders.export.pdf', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2">
                 Finance Invoice
-            </a> -->
+            </a>
+            @endif
             <a href="{{ route('purchase-orders.invoice.customer', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                 Customer Invoice
             </a>
-            @endif
         </div>
     </div>
 

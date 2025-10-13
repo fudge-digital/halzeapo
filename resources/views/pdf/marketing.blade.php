@@ -5,23 +5,24 @@
     <title>Marketing - {{ $po->no_spk }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        .header { font-size: 16px; font-weight: bold; margin-bottom: 20px; text-align:left; }
+        .header { font-size: 12px; font-weight: bold; margin-bottom: 20px; text-align:left; text-transform: uppercase; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; word-wrap: break-word; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: center; word-wrap: break-word; }
         th { background-color: #f9f9f9; }
-        .logo { width: 120px; margin-bottom: 10px; }
+        .logo { width: 100px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
         <img src="{{ public_path('storage/images/HALZEA-LOGO.png') }}" alt="Logo" class="logo">
+        <br>
+        Finance Invoice
     </div>
 
     <p><strong>No SPK:</strong> {{ $po->no_spk ?? '-' }}</p>
-    <p><strong>No Invoice:</strong> {{ $po->no_invoice ?? '-' }}</p>
-    <p><strong>Status Finance:</strong> {{ str_replace('_', ' ', $po->status) ?? '-' }}</p>
-    <p><strong>Customer:</strong> {{ $po->customer ?? 'N/A' }}</p>
-    <p><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
+    <p><strong>Nama Customer:</strong> {{ $po->customer ?? 'N/A' }}</p>
+    <p><strong>Tanggal Invoice:</strong> {{ optional($po->created_at)->format('d-m-Y') ?? '-' }}</p>
+    <p></p>
 
     <table>
         <colgroup>
@@ -41,6 +42,7 @@
                 <th>Ukuran</th>
                 <th>Produksi</th>
                 <th>Finishing-QC</th>
+                <th>Harga Satuan</th>
                 <th>Quantity</th>
             </tr>
         </thead>
@@ -61,15 +63,29 @@
                     {{ $item->fqc_la ? $item->fqc_la.' ' : '' }}
                     {{ $item->fqc_jt ? $item->fqc_jt : '' }}
                 </td>
-                <td style="text-align:center;">{{ $item->quantity ?? 'N/A' }} pcs</td>
+                <td>Rp {{ number_format($item->harga_pokok_penjualan) ?? '0' }}</td>
+                <td>{{ $item->quantity ?? 'N/A' }} pcs</td>
             </tr>
             @endforeach
         </tbody>
         <tfoot>
+            <tr></tr>
             <tr>
-                <th colspan="6" style="text-align: right;">Total Quantity</th>
-                <th style="text-align:center;">
-                    {{ $po->items->sum('quantity') ?? '0' }} pcs
+                <th colspan="7" style="text-align: right;">Total Produksi</th>
+                <th style="text-align:right;">
+                    Rp. {{ number_format($po->total_hpp) ?? '0' }}
+                </th>
+            </tr>
+            <tr>
+                <th colspan="7" style="text-align: right;">Modal Kerja Awal</th>
+                <th style="text-align:right;">
+                    Rp. {{ number_format($po->down_payment) ?? '0' }}
+                </th>
+            </tr>
+            <tr>
+                <th colspan="7" style="text-align: right;">Modal Kerja Dibutuhkan</th>
+                <th style="text-align:right;">
+                    Rp. {{ number_format($po->sisa_pembayaran_hpp) ?? '0' }}
                 </th>
             </tr>
         </tfoot>
