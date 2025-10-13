@@ -13,16 +13,6 @@ jobs:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🧱 Setup PHP & Composer
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, bcmath, intl, pdo, mysql
-          tools: composer
-
-      - name: ⚙️ Install PHP dependencies
-        run: composer install --no-dev --optimize-autoloader
-
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
