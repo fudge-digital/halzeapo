@@ -48,6 +48,7 @@
                     </span>
                 </div>
                 <div class="mt-2">
+                    @if($po->production_status === 'DONE_PRODUCTION')
                     <span>Status Shipping: </span>
                     <span class="px-3 py-1 rounded-full text-xs font-semibold
                         @if($po->shipping_status === 'READY_TO_SHIP') bg-yellow-100 text-yellow-800
@@ -55,6 +56,7 @@
                         @endif">
                         {{ str_replace('_',' ', $po->shipping_status) ?? 'N/A' }}
                     </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -67,7 +69,7 @@
             </div>
             @if($po->status === 'APPROVED_FINANCE' && in_array(Auth::user()->role, ['PRODUKSI', 'SHIPPER', 'MARKETING']))
             <div>
-                <p class="text-gray-500">Approved pada</p>
+                <p class="text-gray-500">Tanggal diedit</p>
                 <p class="font-medium">{{ $po->updated_at ? $po->updated_at->format('d M Y H:i') : '-' }}</p>
             </div>
             @endif
@@ -100,7 +102,9 @@
                             <td class="px-3 py-2 border">{{ $item->kode_desain ?? '-' }}</td>
                             <td class="px-3 py-2 border">
                                 @if($item->desain_approve)
-                                    <img src="{{ asset('storage/'.$item->desain_approve) }}" class="w-16 h-16 object-cover items-center mx-auto" alt="Desain">
+                                    <img src="{{ asset($item->desain_approve) }}" class="w-16 h-16 object-cover items-center mx-auto" alt="Belum di upload">
+                                    <div class="text-center bg-green-500 text-xs font-semibold w-full rounded-full p-1 mt-2 inline-block">
+                                    <button type="button" class="text-xs text-white" @click="$store.imageModal.show('{{ asset($item->desain_approve) }}')">Lihat Desain</button></div>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
@@ -152,14 +156,31 @@
 
         <!-- Payment Info -->
         @if(!in_array(Auth::user()->role, ['PRODUKSI','SHIPPER']))
-        <div class="flex justify-end gap-12 mt-6 text-sm">
+        <div class="flex justify-end items-center gap-12 mt-6 text-sm">
+            <div>
+                <h3 class="text-md font-semibold mb-2">Informasi Modal Kerja</h3>
+            </div>
             <div>
                 <p class="text-gray-500">Down Payment</p>
                 <p class="font-medium">Rp {{ number_format($po->down_payment, 0, ',', '.') }}</p>
             </div>
             <div>
                 <p class="text-gray-500">Sisa Pembayaran</p>
-                <p class="font-medium">Rp {{ number_format($po->sisa_pembayaran, 0, ',', '.') }}</p>
+                <p class="font-medium">Rp {{ number_format($po->sisa_pembayaran_hpp, 0, ',', '.') }}</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end items-center gap-12 mt-6 text-sm">
+            <div>
+                <h3 class="text-md font-semibold mb-2">Informasi Payment Customer</h3>
+            </div>
+            <div>
+                <p class="text-gray-500">Down Payment</p>
+                <p class="font-medium">Rp {{ number_format($po->down_payment, 0, ',', '.') }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500">Sisa Pembayaran</p>
+                <p class="font-medium">Rp {{ number_format($po->sisa_pembayaran_hargajual, 0, ',', '.') }}</p>
             </div>
         </div>
         @endif
@@ -182,7 +203,7 @@
                     @if($po->status === 'APPROVED_FINANCE' && $po->bukti_transfer)
                         <p class="mt-1 text-gray-700">
                             Bukti Transfer: 
-                            <a href="{{ asset('storage/'.$po->bukti_transfer) }}" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</a>
+                            <a href="{{ asset($po->bukti_transfer) }}" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</a>
                         </p>
                     @endif
                 </div>
@@ -290,7 +311,7 @@
                     <p class="mt-1 text-gray-700">Catatan Produksi: {{ $po->production_note }}</p>
                 @endif
                 
-                @if(!$po->production_status === 'DONE_PRODUCTION')
+                @if($po->production_status === 'QUEUE_PRODUCTION' || $po->production_status === 'IN_PRODUCTION' || $po->production_status === 'PENDING_PRODUCTION')
                 <button type="button" id="edit_production_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status Produksi</button>
                 @endif
             </div>
@@ -380,7 +401,7 @@
                     </span>
                 </p>
                 <p class="font-bold mb-1">No Invoice: <span class="font-normal">{{ $po->no_invoice ?? 'N/A' }}</span></p>
-                <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim->format('d-m-Y') ?? 'N/A' }}</span></p>
+                <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim ? $po->tanggal_kirim->format('d M Y H:i') : '-' }}</span></p>
                 <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal">{{ $po->alamat_pengiriman ?? 'N/A' }}</span></p>
 
                 {{-- tombol edit hanya muncul kalau belum ada no_invoice --}}

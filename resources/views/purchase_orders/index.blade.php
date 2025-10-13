@@ -75,6 +75,9 @@
                             <a href="{{ route('purchase-orders.show', $po) }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 transition">
                                 Detail
                             </a>
+                            <a href="{{ route('purchase-orders.edit', $po->id) }}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition">
+                                Edit
+                            </a>
                         </td>
                     </tr>
                 @empty

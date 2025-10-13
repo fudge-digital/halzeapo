@@ -34,6 +34,14 @@ class PurchaseOrderController extends Controller
         return view('purchase_orders.index', compact('pos'));
     }
 
+    public function edit($id)
+    {
+        // Ambil data PO berdasarkan ID
+        $po = PurchaseOrder::with('items')->findOrFail($id);
+
+        return view('purchase_orders.edit', compact('po'));
+    }
+
     public function create()
     {
         $previewNoSpk = PurchaseOrder::generatePreviewNoSpk();
@@ -45,6 +53,9 @@ class PurchaseOrderController extends Controller
     // -----------------------
     public function update(Request $request, PurchaseOrder $po)
     {
+        $id = $po->id;
+        $po = PurchaseOrder::findOrFail($id);
+
         $user = Auth::user();
         if ($user->role !== 'MARKETING') {
             abort(403);
@@ -54,18 +65,29 @@ class PurchaseOrderController extends Controller
             'customer' => 'required|string|max:255',
             'tempat_produksi' => 'nullable|string|max:255',
             'down_payment' => 'nullable|numeric',
+            'down_payment_type' => 'nullable|string|in:nominal,percent',
         ];
 
         $itemsRules = [
-            'items' => 'nullable|array',
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|exists:purchase_order_items,id',
             'items.*.jenis_produksi' => 'nullable|string|max:255',
             'items.*.kode_desain' => 'nullable|string|max:255',
             'items.*.desain_approve' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
             'items.*.bahan' => 'nullable|string|max:255',
             'items.*.ukuran' => 'nullable|string|max:255',
-            'items.*.quantity' => 'nullable|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:1',
             'items.*.harga_pokok_penjualan' => 'nullable|numeric',
             'items.*.harga_jual' => 'nullable|numeric',
+            'items.*.po_press' => 'nullable|string',
+            'items.*.po_print' => 'nullable|string',
+            'items.*.po_press_print' => 'nullable|string',
+            'items.*.fqc_us_option' => 'nullable|string',
+            'items.*.fqc_us_note' => 'nullable|string',
+            'items.*.fqc_la_option' => 'nullable|string',
+            'items.*.fqc_la_note' => 'nullable|string',
+            'items.*.fqc_jt_option' => 'nullable|string',
+            'items.*.fqc_jt_note' => 'nullable|string',
         ];
 
         $request->validate(array_merge($headerRules, $itemsRules));
@@ -74,37 +96,114 @@ class PurchaseOrderController extends Controller
         try {
             $po->update([
                 'customer' => $request->input('customer'),
-                'tempat_produksi' => $request->input('tempat_produksi', $po->tempat_produksi),
-                'down_payment' => $request->input('down_payment', $po->down_payment),
+                'tempat_produksi' => $request->input('tempat_produksi'),
             ]);
 
-            if ($request->has('items')) {
-                foreach ($request->items as $i => $item) {
-                    $poItem = $po->items()->find($item['id'] ?? null);
-                    if (!$poItem) continue;
+            $totalHpp = 0;
+            $totalHargaJual = 0;
 
-                    if ($request->hasFile("items.$i.desain_approve")) {
-                        $desainPath = $request->file("items.$i.desain_approve")->store('uploads/desain', 'public');
-                        $poItem->desain_approve = $desainPath;
+            // === FIX BAGIAN INI ===
+            // Ambil semua id item lama dari DB
+            $existingIds = $po->items()->pluck('id')->toArray();
+            // Ambil semua id item dari request
+            $requestIds = collect($request->items)->pluck('id')->filter()->toArray();
+
+            // Hapus item yang tidak ada di request
+            $toDelete = array_diff($existingIds, $requestIds);
+            if (!empty($toDelete)) {
+                // Hapus file desain_approve juga kalau ada
+                $itemsToDelete = $po->items()->whereIn('id', $toDelete)->get();
+                foreach ($itemsToDelete as $itemDel) {
+                    if ($itemDel->desain_approve && file_exists(public_path($itemDel->desain_approve))) {
+                        @unlink(public_path($itemDel->desain_approve));
+                    }
+                }
+                $po->items()->whereIn('id', $toDelete)->delete();
+            }
+            // === SAMPAI SINI ===
+
+            foreach ($request->items as $i => $item) {
+                $itemModel = isset($item['id'])
+                    ? $po->items()->find($item['id'])
+                    : $po->items()->make();
+
+                // Upload file baru jika ada
+                $desainPath = $itemModel->desain_approve ?? null;
+
+                if ($request->hasFile("items.$i.desain_approve")) {
+                    // Hapus file lama jika ada dan masih tersimpan di public path
+                    if ($desainPath && file_exists(public_path($desainPath))) {
+                        @unlink(public_path($desainPath));
                     }
 
-                    $poItem->update([
-                        'jenis_produksi' => $item['jenis_produksi'] ?? $poItem->jenis_produksi,
-                        'kode_desain' => $item['kode_desain'] ?? $poItem->kode_desain,
-                        'bahan' => $item['bahan'] ?? $poItem->bahan,
-                        'ukuran' => $item['ukuran'] ?? $poItem->ukuran,
-                        'quantity' => $item['quantity'] ?? $poItem->quantity,
-                        'harga_pokok_penjualan' => $item['harga_pokok_penjualan'] ?? $poItem->harga_pokok_penjualan,
-                        'harga_jual' => $item['harga_jual'] ?? $poItem->harga_jual,
-                    ]);
+                    // Upload file baru
+                    $file = $request->file("items.$i.desain_approve");
+                    $filename = time() . '_' . Str::random(6) . '_' . $file->getClientOriginalName();
+                    $destination = public_path('uploads/desain');
+
+                    if (!file_exists($destination)) {
+                        mkdir($destination, 0777, true);
+                    }
+
+                    $file->move($destination, $filename);
+                    $desainPath = 'uploads/desain/' . $filename;
                 }
+
+                $qty = (int) ($item['quantity'] ?? 0);
+                $hpp = isset($item['harga_pokok_penjualan']) ? floatval(preg_replace('/[^\d.]/','',$item['harga_pokok_penjualan'])) : 0;
+                $hargaJual = isset($item['harga_jual']) ? floatval(preg_replace('/[^\d.]/','',$item['harga_jual'])) : 0;
+
+                $total_hpp_item = $hpp * $qty;
+                $total_harga_jual_item = $hargaJual * $qty;
+
+                $itemModel->fill([
+                    'jenis_produksi' => $item['jenis_produksi'] ?? null,
+                    'kode_desain' => $item['kode_desain'] ?? null,
+                    'desain_approve' => $desainPath,
+                    'bahan' => $item['bahan'] ?? null,
+                    'ukuran' => $item['ukuran'] ?? null,
+                    'quantity' => $qty,
+                    'harga_pokok_penjualan' => $hpp,
+                    'total_hpp' => $total_hpp_item,
+                    'harga_jual' => $hargaJual,
+                    'total_harga_jual' => $total_harga_jual_item,
+                    'po_press' => $item['po_press'] ?? null,
+                    'po_print' => $item['po_print'] ?? null,
+                    'po_press_print' => $item['po_press_print'] ?? null,
+                ])->save();
+
+                $totalHpp += $total_hpp_item;
+                $totalHargaJual += $total_harga_jual_item;
             }
 
+            // Recalculate DP & sisa
+            $downPaymentInput = floatval($request->input('down_payment', 0));
+            $downPaymentType = $request->input('down_payment_type', 'nominal');
+
+            if ($downPaymentType === 'percent') {
+                $downPayment = ($totalHargaJual * $downPaymentInput) / 100;
+            } else {
+                $downPayment = $downPaymentInput;
+            }
+
+            $sisaHargaJual = $totalHargaJual - $downPayment;
+            $sisaHPP = $totalHpp - $downPayment;
+
+            $po->update([
+                'total_hpp' => $totalHpp,
+                'total_harga_jual' => $totalHargaJual,
+                'down_payment' => $downPayment,
+                'sisa_pembayaran_hpp' => $sisaHPP,
+                'sisa_pembayaran_hargajual' => $sisaHargaJual,
+            ]);
+
             DB::commit();
-            return redirect()->back()->with('success', 'Purchase Order berhasil diperbarui.');
+
+            return redirect()->route('purchase-orders.show', $po)
+                ->with('success', 'Purchase Order berhasil diperbarui.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Error update PO: '.$e->getMessage());
+            \Log::error('Error saat update PO: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
     }
@@ -125,6 +224,7 @@ class PurchaseOrderController extends Controller
             'tempat_produksi' => 'nullable|string|max:255',
             'no_spk' => 'nullable|string|max:255',
             'down_payment' => 'nullable|numeric',
+            'down_payment_type' => 'nullable|in:nominal,percent',
             // sisa_pembayaran optional; server akan hitung ulang
         ];
 
@@ -167,7 +267,8 @@ class PurchaseOrderController extends Controller
                 'customer' => $request->input('customer'),
                 'tempat_produksi' => $request->input('tempat_produksi'),
                 'down_payment' => $request->input('down_payment', 0),
-                'sisa_pembayaran' => 0, // akan diupdate setelah hitung totals
+                'sisa_pembayaran_hpp' => 0, // akan diupdate setelah hitung totals
+                'sisa_pembayaran_hargajual' => 0, // akan diupdate setelah hitung totals
                 'status' => PurchaseOrder::STATUS_PENDING,
                 'created_by' => $user->id,
             ]);
@@ -180,7 +281,16 @@ class PurchaseOrderController extends Controller
                     // handle per-item file
                     $desainPath = null;
                     if ($request->hasFile("items.$i.desain_approve")) {
-                        $desainPath = $request->file("items.$i.desain_approve")->store('uploads/desain', 'public');
+                        $file = $request->file("items.$i.desain_approve");
+                        $filename = time() . '_' . $file->getClientOriginalName();
+                        $destination = public_path('uploads/desain');
+
+                        if (!file_exists($destination)) {
+                            mkdir($destination, 0777, true);
+                        }
+
+                        $file->move($destination, $filename);
+                        $desainPath = 'uploads/desain/' . $filename;
                     }
 
                     // map FQC: (example mapping)
@@ -219,14 +329,28 @@ class PurchaseOrderController extends Controller
                 }
             }
 
-            // update header totals + sisa pembayaran
-            $downPayment = floatval($request->input('down_payment', 0));
-            $sisa = $totalHargaJual - $downPayment;
+            // Ambil nilai DP
+            $downPaymentInput = floatval($request->input('down_payment', 0));
+            $downPaymentType = $request->input('down_payment_type', 'nominal'); // default nominal
+
+            if ($downPaymentType === 'percent') {
+                // Jika input berupa persentase
+                $downPayment = ($totalHargaJual * $downPaymentInput) / 100;
+            } else {
+                // Jika nominal
+                $downPayment = $downPaymentInput;
+            }
+
+            // Hitung sisa pembayaran
+            $sisaHargaJual = $totalHargaJual - $downPayment;
+            $sisaHPP = $totalHpp - $downPayment;
+
             $po->update([
                 'total_hpp' => $totalHpp,
                 'total_harga_jual' => $totalHargaJual,
                 'down_payment' => $downPayment,
-                'sisa_pembayaran' => $sisa,
+                'sisa_pembayaran_hpp' => $sisaHPP,
+                'sisa_pembayaran_hargajual' => $sisaHargaJual,
             ]);
 
             DB::commit();

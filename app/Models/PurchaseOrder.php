@@ -25,7 +25,8 @@ class PurchaseOrder extends Model
         'total_hpp',
         'total_harga_jual',
         'down_payment',
-        'sisa_pembayaran',
+        'sisa_pembayaran_hpp',
+        'sisa_pembayaran_hargajual',
         'status',
         'production_status',
         'created_by',
@@ -52,7 +53,7 @@ class PurchaseOrder extends Model
 
     public function items()
     {
-        return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
+        return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id')->distinct();
     }
 
     //

@@ -40,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['can:create-po'])->group(function () {
         Route::get('purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
         Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
+        Route::put('/purchase-orders/{po}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+        Route::get('/purchase-orders/{po}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
     });
 
     // custom actions

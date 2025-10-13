@@ -12,7 +12,7 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex h-screen bg-gray-100" style="font-family: 'Barlow', sans-serif;">
+<body class="flex h-screen bg-gray-100" style="font-family: 'Barlow', sans-serif;" x-data>
 
     <!-- Overlay (mobile only) -->
     <div 
@@ -115,6 +115,19 @@
         <main class="p-6 flex-1 overflow-y-auto">
             @yield('content')
         </main>
+
+        <!-- Modal Preview Desain Approve -->
+        <div x-data
+        x-show="$store.imageModal.open"
+        @keydown.escape.window="$store.imageModal.close()"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+        x-cloak>
+        <div class="bg-white rounded-xl p-4 max-w-3xl w-full mx-4 relative">
+            <button @click="$store.imageModal.close()" class="absolute top-2 right-2 text-center text-gray-500 hover:text-gray-700">✕</button>
+            <img :src="$store.imageModal.imageUrl" class="rounded-lg mx-auto max-h-[80vh] object-contain">
+        </div>
+    </div>
+
     </div>
     {{-- Toastr calls --}}
     <script>
@@ -132,6 +145,22 @@
             toastr.error(@json($error));
             @endforeach
         @endif
+        });
+    </script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('imageModal', {
+                open: false,
+                imageUrl: '',
+                show(url) {
+                    this.imageUrl = url;
+                    this.open = true;
+                },
+                close() {
+                    this.open = false;
+                    this.imageUrl = '';
+                }
+            });
         });
     </script>
 </body>
