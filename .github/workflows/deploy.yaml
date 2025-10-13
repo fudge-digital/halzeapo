@@ -39,7 +39,6 @@ jobs:
             **/docker/**
             **/vendor/**
             **/package*.json
-            **/vite.config.*
             **/README.md
             **/.env
           dangerous-clean-slate: false
