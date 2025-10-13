@@ -33,11 +33,8 @@ jobs:
           npm ci
           npm run build
 
-      - name: 🧱 Build Laravel cache
+      - name: 🧱 Build Optimize Clear
         run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
           php artisan optimize:clear
 
       - name: 🚀 Deploy to Niagahoster via FTP
