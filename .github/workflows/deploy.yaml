@@ -33,10 +33,6 @@ jobs:
           npm ci
           npm run build
 
-      - name: 🧱 Build Optimize Clear
-        run: |
-          php artisan optimize:clear
-
       - name: 🚀 Deploy to Niagahoster via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
