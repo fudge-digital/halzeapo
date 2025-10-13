@@ -6,12 +6,12 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
-            buildDirectory: 'build', // penting: arahkan Laravel ke folder yang benar
         }),
     ],
     build: {
-        outDir: 'build', // ubah dari public/build ke build saja
+        outDir: 'public/build', // pastikan hasil build ke sini
         manifest: true,
         emptyOutDir: true,
     },
 });
+
