@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && cp -f public/build/.vite/manifest.json public/build/manifest.json",
+        "build": "vite build && node postbuild.js",
         "dev": "vite"
     },
     "devDependencies": {
