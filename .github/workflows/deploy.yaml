@@ -1,36 +1,47 @@
-name: Deploy Laravel to Niagahoster
+name: 🚀 Deploy Laravel to Niagahoster (Vite + Composer)
 
 on:
   push:
     branches:
-      - main  # atau dev kalau mau untuk branch dev dulu
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📦 Checkout repository
         uses: actions/checkout@v4
-      
-      - name: 🧱 Setup PHP
+
+      - name: 🧱 Setup PHP & Composer
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, bcmath, intl, pdo, mysql
           tools: composer
 
-      - name: Setup Node.js
+      - name: ⚙️ Install PHP dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Build frontend assets
+      - name: 🧩 Build frontend (Vite)
         run: |
           npm ci
           npm run build
 
-      - name: Deploy to Niagahoster via FTP
+      - name: 🧱 Build Laravel cache
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: 🚀 Deploy to Niagahoster via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -41,12 +52,10 @@ jobs:
             **/.git*
             **/.github*
             **/node_modules/**
-            **/storage/**
             **/tests/**
             **/docker/**
-            **/vendor/**
-            **/package*.json
-            **/README.md
-            **/.env
+            storage/logs/**
+            storage/framework/cache/**
+            storage/framework/views/**
           dangerous-clean-slate: false
           state-name: .ftp-deploy-sync-state.json
