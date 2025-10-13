@@ -139,7 +139,7 @@ class PurchaseOrderController extends Controller
                     // Upload file baru
                     $file = $request->file("items.$i.desain_approve");
                     $filename = time() . '_' . Str::random(6) . '_' . $file->getClientOriginalName();
-                    $destination = public_path('uploads/desain');
+                    $destination = public_path(env('UPLOAD_PATH', 'uploads/desain'));
 
                     if (!file_exists($destination)) {
                         mkdir($destination, 0777, true);
