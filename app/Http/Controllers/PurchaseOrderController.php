@@ -283,7 +283,7 @@ class PurchaseOrderController extends Controller
                     if ($request->hasFile("items.$i.desain_approve")) {
                         $file = $request->file("items.$i.desain_approve");
                         $filename = time() . '_' . $file->getClientOriginalName();
-                        $destination = public_path('uploads/desain');
+                        $destination = public_path(env('UPLOAD_PATH', 'uploads/desain'));
 
                         if (!file_exists($destination)) {
                             mkdir($destination, 0777, true);
@@ -389,8 +389,17 @@ class PurchaseOrderController extends Controller
         $po->status = $request->status;
 
         if ($request->status === 'APPROVED_FINANCE' && $request->hasFile('bukti_transfer')) {
-            $path = $request->file('bukti_transfer')->store('bukti_transfer', 'public');
-            $po->bukti_transfer = $path;
+            $file = $request->file('bukti_transfer');
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            $destination = public_path(env('UPLOAD_PATH_BUKTI', 'uploads/bukti_transfer'));
+
+            if (!file_exists($destination)) {
+                mkdir($destination, 0755, true);
+            }
+
+            $file->move($destination, $filename);
+            $po->bukti_transfer = 'uploads/bukti_transfer/' . $filename;
             $po->rejected_note = null;
         }
 
@@ -520,22 +529,22 @@ class PurchaseOrderController extends Controller
         return $pdf->download($filename);
     }
 
-    public function previewPdf(PurchaseOrder $po)
+    public function invoiceCustomer(PurchaseOrder $po)
     {
         $user = auth()->user();
 
-        if ($user->hasAnyRole(['FINANCE','MARKETING'])) {
-            $view = 'pdf.finance_marketing';
-        } elseif ($user->hasRole('PRODUKSI')) {
-            $view = 'pdf.produksi';
-        } elseif ($user->hasRole('SHIPPER')) {
-            $view = 'pdf.shipper';
+        if ($user->hasRole('MARKETING')) {
+            $view = 'pdf.customerinvoice';
         } else {
             $view = 'pdf.default';
         }
 
-        // return sebagai HTML biasa (tanpa PDF)
-        return view($view, compact('po', 'user'));
+        $pdf = \PDF::loadView($view, compact('po', 'user'))
+            ->setPaper('A4', 'landscape');
+
+        $filename = "INVOICE-CUSTOMER-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
+
+        return $pdf->download($filename);
     }
 
 

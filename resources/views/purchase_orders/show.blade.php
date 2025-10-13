@@ -8,9 +8,14 @@
             <a href="{{ route('purchase-orders.index') }}" class="px-4 py-2 bg-gray-500 rounded-lg text-sm text-white">Kembali</a>
         </div>
         <div>
-            <a href="{{ route('purchase-orders.export.pdf', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            Export PDF
+            @if(Auth::user()->role === 'MARKETING')
+            <!-- <a href="{{ route('purchase-orders.export.pdf', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2">
+                Finance Invoice
+            </a> -->
+            <a href="{{ route('purchase-orders.invoice.customer', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Customer Invoice
             </a>
+            @endif
         </div>
     </div>
 
@@ -203,7 +208,7 @@
                     @if($po->status === 'APPROVED_FINANCE' && $po->bukti_transfer)
                         <p class="mt-1 text-gray-700">
                             Bukti Transfer: 
-                            <a href="{{ asset($po->bukti_transfer) }}" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</a>
+                            <button type="button" @click="$store.imageModal.show( {{ asset($po->bukti_transfer) }} )" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</button>
                         </p>
                     @endif
                 </div>

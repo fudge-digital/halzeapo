@@ -58,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
     // routes/web.php
     Route::get('/purchase-orders/{po}/export-pdf', [PurchaseOrderController::class, 'exportPdf'])->name('purchase-orders.export.pdf');
 
-    Route::get('/purchase-orders/{po}/preview', [PurchaseOrderController::class, 'previewPdf'])->name('purchase-orders.preview');
+    Route::get('/purchase-orders/{po}/invoice-customer', [PurchaseOrderController::class, 'invoiceCustomer'])->name('purchase-orders.invoice.customer');
 
 });
 

@@ -69,9 +69,9 @@
                                    accept="image/png,image/jpeg"
                                    class="mt-1 block w-full text-sm text-gray-600">
                             <template x-if="item.desain_approve">
-                                <a :href="'/' + item.desain_approve"
+                                <button type="button" @click="$store.imageModal.show('/' + item.desain_approve)"
                                    target="_blank"
-                                   class="text-blue-500 text-sm block mt-1">Lihat Desain Lama</a>
+                                   class="text-blue-500 text-sm block mt-1">Lihat Desain Lama</button>
                             </template>
                         </div>
                     </div>
@@ -272,7 +272,6 @@
                     class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">
                 Update Purchase Order
             </button>
-            <pre x-text="JSON.stringify(items, null, 2)"></pre>
         </div>
     </form>
 </div>
