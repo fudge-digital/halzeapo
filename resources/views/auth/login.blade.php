@@ -4,7 +4,7 @@
 <div class="min-h-screen flex flex-col lg:flex-row">
     {{-- Left side --}}
     <div class="w-full lg:w-1/2 bg-yellow-100 flex flex-col items-center justify-center p-6">
-        <img src="{{ asset('public/images/HALZEA-LOGO.png') }}" style="width:200px;" alt="Banner" class="max-w-md mb-4">
+        <img src="{{ asset('images/HALZEA-LOGO.png') }}" style="width:200px;" alt="Banner" class="max-w-md mb-4">
         <div class="text-center lg:text-center">
             <!-- <h2 class="text-3xl font-bold text-gray-800 mb-2">HALZEA</h2> -->
             <p class="text-xs text-gray-600">POMS V.01 <br>&copy; Fudge Digital - 2025</p>
