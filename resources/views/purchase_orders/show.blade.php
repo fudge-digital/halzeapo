@@ -5,7 +5,12 @@
     <!-- Back Button -->
     <div class="mb-6 flex justify-between space-x-3">
         <div>
-            <a href="{{ route('purchase-orders.index') }}" class="px-4 py-2 bg-gray-500 rounded-lg text-sm text-white">Kembali</a>
+            <a href="{{ route('purchase-orders.index') }}" class="px-4 py-2 bg-gray-500 rounded text-sm text-white mr-2">Kembali</a>
+            @if(Auth::user()->role === 'MARKETING')
+            <a href="{{ route('purchase-orders.edit', $po->id) }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition">
+                Edit
+            </a>
+            @endif
         </div>
         <div>
             @if(Auth::user()->role === 'MARKETING' && $po->status === 'APPROVED_FINANCE')
@@ -161,33 +166,64 @@
 
         <!-- Payment Info -->
         @if(!in_array(Auth::user()->role, ['PRODUKSI','SHIPPER']))
-        <div class="flex justify-end items-center gap-12 mt-6 text-sm">
-            <div>
-                <h3 class="text-md font-semibold mb-2">Informasi Modal Kerja</h3>
+        <div class="mt-8 space-y-8 text-sm text-right md:text-left">
+            {{-- Total Harga Jual --}}
+            {{-- Down Payment --}}
+            <div class="grid grid-cols-3 gap-4 items-center border-t pt-4">
+                <div class="col-span-1 text-gray-500"></div>
+                <div class="col-span-1">
+                    <h3 class="text-md font-semibold text-gray-700">Down Payment</h3>
+                </div>
+                <div class="col-span-1 font-medium">
+                    @if ($po->down_payment_type === 'persen')
+                        @php
+                            $persenDPHPP = $po->total_hpp > 0 
+                                ? round(($po->down_payment / $po->total_hpp) * 100, 2)
+                                : 0;
+                        @endphp
+                        {{ $persenDPHPP }}%
+                    @else
+                        Rp {{ number_format($po->down_payment, 0, ',', '.') }}
+                    @endif
+                </div>
             </div>
-            <div>
-                <p class="text-gray-500">Down Payment</p>
-                <p class="font-medium">Rp {{ number_format($po->down_payment, 0, ',', '.') }}</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Sisa Pembayaran</p>
-                <p class="font-medium">Rp {{ number_format($po->sisa_pembayaran_hpp, 0, ',', '.') }}</p>
-            </div>
-        </div>
 
-        <div class="flex justify-end items-center gap-12 mt-6 text-sm">
-            <div>
-                <h3 class="text-md font-semibold mb-2">Informasi Payment Customer</h3>
+            {{-- Informasi Modal Kerja --}}
+            <div class="grid grid-cols-3 gap-4 items-center border-t pt-4">
+                <div class="col-span-1 text-gray-500"></div>
+                <div class="col-span-1">
+                    <h3 class="text-md font-semibold text-gray-700">Informasi Modal Kerja</h3>
+                </div>
+                <div class="col-span-1 font-medium">
+                    Rp {{ number_format($po->sisa_pembayaran_hpp, 0, ',', '.') }}
+                </div>
             </div>
-            <div>
-                <p class="text-gray-500">Down Payment</p>
-                <p class="font-medium">Rp {{ number_format($po->down_payment, 0, ',', '.') }}</p>
-            </div>
-            <div>
-                <p class="text-gray-500">Sisa Pembayaran</p>
-                <p class="font-medium">Rp {{ number_format($po->sisa_pembayaran_hargajual, 0, ',', '.') }}</p>
+
+            {{-- Informasi Payment Customer --}}
+            <div class="grid grid-cols-3 gap-4 items-center border-t pt-4">
+                <div class="col-span-1 text-gray-500"></div>
+                <div class="col-span-1">
+                    <h3 class="text-md font-semibold text-gray-700">Sisa Pembayaran Customer</h3>
+                </div>
+                <div class="col-span-1 font-medium">
+                    Rp {{ number_format($po->sisa_pembayaran_hargajual, 0, ',', '.') }}
+                </div>
             </div>
         </div>
+        @endif
+    </div>
+
+    <div class="bg-white shadow rounded-xl p-6 border mt-6">
+        @if($po->status === 'REJECTED')
+            <h2 class="text-lg font-semibold mb-4">Catatan</h2>
+            <p class="text-gray-700 whitespace-pre-wrap">{{ $po->rejected_notes ?? 'Tidak ada catatan.' }}</p>
+        @elseif($po->status === 'APPROVED_FINANCE' && $po->bukti_transfer)
+            <h2 class="text-lg font-semibold mb-4">Bukti Transfer</h2>
+            <p class="text-gray-700 whitespace-pre-wrap">
+                <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer) }}')" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</button>
+            </p>
+        @else
+            <p class="text-gray-500">Belum ada catatan atau bukti transfer.</p>
         @endif
     </div>
 
@@ -208,7 +244,7 @@
                     @if($po->status === 'APPROVED_FINANCE' && $po->bukti_transfer)
                         <p class="mt-1 text-gray-700">
                             Bukti Transfer: 
-                            <button type="button" @click="$store.imageModal.show( {{ asset($po->bukti_transfer) }} )" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</button>
+                            <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer) }}')" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</button>
                         </p>
                     @endif
                 </div>

@@ -160,16 +160,20 @@
         <div class="grid grid-cols-2 gap-6 mt-6">
             <div>
                 <label class="block text-sm font-medium">Tipe Down Payment</label>
-                <select x-model="dpType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <select x-model="dpType"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     <option value="nominal">Nominal (Rp)</option>
                     <option value="persen">Persentase (%)</option>
                 </select>
+
+                <!-- ✅ Hidden input yang benar-benar dikirim -->
+                <input type="hidden" name="down_payment_type" :value="dpType">
             </div>
 
             <div>
                 <label class="block text-sm font-medium">Down Payment</label>
                 <input type="number" step="0.01" x-model="downPayment" name="down_payment"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" :placeholder="dpType === 'persen' ? 'Masukkan persen (contoh: 10)' : 'Masukkan nominal (contoh: 1000000)'">
             </div>
         </div>
 
@@ -284,51 +288,63 @@ function purchaseOrderForm() {
             }, 0);
         },
         
-        dpType: 'nominal',
-        downPayment: 0,
+        dpType: 'nominal',   // 'nominal' atau 'persen'
+        downPayment: 0,      // nilai yang diinput user (angka). jika persen = 10 artinya 10%
+
+        // helper: parse nilai dp jadi number aman
+        parseDP() {
+        const v = parseFloat(this.downPayment);
+        return isNaN(v) ? 0 : v;
+        },
 
         get totalHPPAll() {
-            return this.items.reduce((sum, item) => {
-                return sum + (Number(item.quantity) * Number(item.harga_pokok_penjualan || 0));
-            }, 0);
+        return this.items.reduce((sum, item) => {
+            return sum + (Number(item.quantity || 0) * Number(item.harga_pokok_penjualan || 0));
+        }, 0);
         },
         get totalHargaJualAll() {
-            return this.items.reduce((sum, item) => {
-                return sum + (Number(item.quantity) * Number(item.harga_jual || 0));
-            }, 0);
+        return this.items.reduce((sum, item) => {
+            return sum + (Number(item.quantity || 0) * Number(item.harga_jual || 0));
+        }, 0);
         },
 
+        // down payment dalam bentuk nominal (Rp) terhadap HPP/HargaJual
         get downPaymentHPP() {
-            if (this.dpType === 'persen') {
-                return (this.totalHPPAll * (this.downPayment / 100)) || 0;
-            }
-            return Number(this.downPayment || 0);
+        const dp = this.parseDP();
+        if (this.dpType === 'persen') {
+            // dp = 10 -> 10% -> 0.10
+            return (this.totalHPPAll * (dp / 100)) || 0;
+        }
+        return dp;
         },
         get downPaymentHargaJual() {
-            if (this.dpType === 'persen') {
-                return (this.totalHargaJualAll * (this.downPayment / 100)) || 0;
-            }
-            return Number(this.downPayment || 0);
+        const dp = this.parseDP();
+        if (this.dpType === 'persen') {
+            return (this.totalHargaJualAll * (dp / 100)) || 0;
+        }
+        return dp;
         },
 
         get sisaHPP() {
-            return Math.max(this.totalHPPAll - this.downPaymentHPP, 0);
+        // jangan negatif
+        return Math.max(this.totalHPPAll - this.downPaymentHPP, 0);
         },
         get sisaHargaJual() {
-            return Math.max(this.totalHargaJualAll - this.downPaymentHargaJual, 0);
+        return Math.max(this.totalHargaJualAll - this.downPaymentHargaJual, 0);
         },
 
+        // Display formatted
         get totalHPPDisplay() {
-            return this.totalHPPAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return this.totalHPPAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
         get totalHargaJualDisplay() {
-            return this.totalHargaJualAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return this.totalHargaJualAll.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
         get sisaHPPDisplay() {
-            return this.sisaHPP.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return this.sisaHPP.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
         get sisaHargaJualDisplay() {
-            return this.sisaHargaJual.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return this.sisaHargaJual.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
     }
