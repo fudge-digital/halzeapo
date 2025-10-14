@@ -224,16 +224,21 @@
         <div class="grid grid-cols-2 gap-6 mt-6">
             <div>
                 <label class="block text-sm font-medium">Tipe Down Payment</label>
-                <select x-model="dpType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                <select x-model="dpType"
+                        x-init="dpType = '{{ old('down_payment_type', $po->down_payment_type ?? 'nominal') }}'"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     <option value="nominal">Nominal (Rp)</option>
                     <option value="persen">Persentase (%)</option>
                 </select>
+
+                <!-- ✅ Hidden input yang benar-benar dikirim -->
+                <input type="hidden" name="down_payment_type" :value="dpType">
             </div>
             <div>
                 <label class="block text-sm font-medium">Down Payment</label>
                 <input type="number" step="0.01" name="down_payment"
-                       x-model="downPayment"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    x-model="downPayment"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" :placeholder="dpType === 'persen' ? 'Masukkan persen (contoh: 10)' : 'Masukkan nominal (contoh: 1000000)'">
             </div>
         </div>
 
@@ -241,12 +246,12 @@
             <div>
                 <label>Total HPP</label>
                 <input type="text" x-model="totalHPPDisplay"
-                       class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
             </div>
             <div>
                 <label>Total Harga Jual</label>
                 <input type="text" x-model="totalHargaJualDisplay"
-                       class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
             </div>
         </div>
 
@@ -254,14 +259,14 @@
             <div>
                 <label>Sisa Pembayaran (HPP)</label>
                 <input type="text" x-model="sisaHPPDisplay"
-                       class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
                 <input type="hidden" name="sisa_pembayaran_hpp" :value="sisaHPP">
             </div>
 
             <div>
                 <label>Sisa Pembayaran (Harga Jual)</label>
                 <input type="text" x-model="sisaHargaJualDisplay"
-                       class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
                 <input type="hidden" name="sisa_pembayaran_hargajual" :value="sisaHargaJual">
             </div>
         </div>

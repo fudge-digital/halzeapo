@@ -55,29 +55,43 @@
                             </span>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 rounded-lg text-xs font-medium
-                                @if($po->production_status === 'IN_PRODUCTION') bg-blue-100 text-blue-700
-                                @elseif($po->production_status === 'QUEUE_PRODUCTION') bg-yellow-100 text-yellow-700
-                                @elseif($po->production_status === 'PENDING_PRODUCTION') bg-purple-100 text-purple-700
-                                @elseif($po->production_status === 'DONE_PRODUCTION') bg-green-200 text-green-700
-                                @endif">
-                                {{ str_replace('_',' ',$po->production_status) ?? '-' }}
-                            </span>
+                            @if($po->status === 'APPROVED_FINANCE')
+                                <span class="px-2 py-1 rounded-lg text-xs font-medium
+                                    @if($po->production_status === 'IN_PRODUCTION') bg-blue-100 text-blue-700
+                                    @elseif($po->production_status === 'QUEUE_PRODUCTION') bg-yellow-100 text-yellow-700
+                                    @elseif($po->production_status === 'PENDING_PRODUCTION') bg-purple-100 text-purple-700
+                                    @elseif($po->production_status === 'DONE_PRODUCTION') bg-green-200 text-green-700
+                                    @endif">
+                                    {{ str_replace('_',' ',$po->production_status) ?? '-' }}
+                                </span>
+                            @else
+                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700">
+                                    Menunggu
+                                </span>
+                            @endif
                         </td>
                         <td class="px-4 py-3">
-                            <span class="px-2 py-1 rounded-lg text-xs font-medium
-                                @if($po->shipping_status === 'READY_TO_SHIP') bg-yellow-100 text-yellow-700
-                                @elseif($po->shipping_status === 'SHIPPED') bg-green-100 text-green-700
-                                @endif">
-                                {{ str_replace('_',' ',$po->shipping_status) ?? '-' }}
-                            </span>
+                            @if($po->tanggal_kirim)
+                                <span class="px-2 py-1 rounded-lg text-xs font-medium
+                                    @if($po->shipping_status === 'READY_TO_SHIP') bg-yellow-100 text-yellow-700
+                                    @elseif($po->shipping_status === 'SHIPPED') bg-green-100 text-green-700
+                                    @endif">
+                                    {{ str_replace('_',' ',$po->shipping_status) ?? '-' }}
+                                </span>
+                            @else
+                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700">
+                                    Menunggu
+                                </span>
+                            @endif
                         <td class="px-4 py-3 text-center">
                             <a href="{{ route('purchase-orders.show', $po) }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 transition">
                                 Detail
                             </a>
+                            @if(Auth::user()->role === 'MARKETING')
                             <a href="{{ route('purchase-orders.edit', $po->id) }}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition">
                                 Edit
                             </a>
+                            @endif
                         </td>
                     </tr>
                 @empty

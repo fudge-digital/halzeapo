@@ -25,6 +25,7 @@ class PurchaseOrder extends Model
         'total_hpp',
         'total_harga_jual',
         'down_payment',
+        'down_payment_type',
         'sisa_pembayaran_hpp',
         'sisa_pembayaran_hargajual',
         'status',
@@ -47,6 +48,7 @@ class PurchaseOrder extends Model
         'total_hpp' => 'decimal:2',
         'total_harga_jual' => 'decimal:2',
         'down_payment' => 'decimal:2',
+        'down_payment_type' => 'string',
         'sisa_pembayaran' => 'decimal:2',
         'tanggal_kirim' => 'date',
     ];
