@@ -166,7 +166,7 @@
 
         <!-- Payment Info -->
         @if(!in_array(Auth::user()->role, ['PRODUKSI','SHIPPER']))
-        <div class="mt-8 space-y-8 text-sm text-right md:text-left">
+        <div class="mt-8 space-y-8 text-sm text-right">
             {{-- Total Harga Jual --}}
             {{-- Down Payment --}}
             <div class="grid grid-cols-3 gap-4 items-center border-t pt-4">
