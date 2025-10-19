@@ -327,7 +327,7 @@ class PurchaseOrderController extends Controller
                         'ukuran' => $item['ukuran'] ?? null,
                         'quantity' => $qty,
                         'harga_pokok_penjualan' => $hpp,
-                        'total_hpp' => $total_hpp_item,
+                        'total_hpp' => $total_hpp_item ?? '0',
                         'harga_jual' => $hargaJual,
                         'total_harga_jual' => $total_harga_jual_item,
                         'po_press' => $item['po_press'] ?? null,
