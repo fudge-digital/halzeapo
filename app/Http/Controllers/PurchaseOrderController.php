@@ -170,6 +170,9 @@ class PurchaseOrderController extends Controller
                     'po_press' => $item['po_press'] ?? null,
                     'po_print' => $item['po_print'] ?? null,
                     'po_press_print' => $item['po_press_print'] ?? null,
+                    'fqc_us' => $item['fqc_us_note'] ?? null,
+                    'fqc_la' => $item['fqc_la_note'] ?? null,
+                    'fqc_jt' => $item['fqc_jt_note'] ?? null,
                 ])->save();
 
                 $totalHpp += $total_hpp_item;
@@ -330,9 +333,9 @@ class PurchaseOrderController extends Controller
                         'po_press' => $item['po_press'] ?? null,
                         'po_print' => $item['po_print'] ?? null,
                         'po_press_print' => $item['po_press_print'] ?? null,
-                        'fqc_us' => $fqc_us,
-                        'fqc_la' => $fqc_la,
-                        'fqc_jt' => $fqc_jt,
+                        'fqc_us' => $item['fqc_us'] ?? null,
+                        'fqc_la' => $item['fqc_la'] ?? null,
+                        'fqc_jt' => $item['fqc_jt'] ?? null,
                     ]);
 
                     $totalHpp += $total_hpp_item;
@@ -565,6 +568,15 @@ class PurchaseOrderController extends Controller
         return $pdf->download($filename);
     }
 
+    // DELETE PURCHASE ORDER (MARKETING ONLY)
+    public function destroy($id)
+    {
+        $po = PurchaseOrder::findOrFail($id);
+        $po->delete();
+
+        return redirect()->route('purchase-orders.index')
+                        ->with('success', 'Purchase Order berhasil dihapus.');
+    }
 
 }
 

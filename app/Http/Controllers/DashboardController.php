@@ -19,8 +19,11 @@ class DashboardController extends Controller
         $queuedPO = \App\Models\PurchaseOrder::where('production_status', 'QUEUE_PRODUCTION')->count();
         $inprogPO = \App\Models\PurchaseOrder::where('production_status', 'IN_PRODUCTION')->count();
         $completedPO = \App\Models\PurchaseOrder::where('production_status', 'DONE_PRODUCTION')->count();
-        $readyshipPO = \App\Models\PurchaseOrder::where('shipping_status', 'READY_TO_SHIP')->count();
         $shippedPO = \App\Models\PurchaseOrder::where('shipping_status', 'SHIPPED')->count();
+
+        // Jika sudah ada yang dikirim (shippedPO > 0) maka siap dikirim = 0
+        // Jika belum ada yang dikirim, maka siap dikirim = completedPO
+        $readyshipPO = $shippedPO > 0 ? 0 : $completedPO;
 
         // Ambil PO sesuai role
         if (in_array($user->role, ['SUPERADMIN', 'ADMIN'])) {

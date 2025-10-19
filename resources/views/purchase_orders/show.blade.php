@@ -213,6 +213,7 @@
         @endif
     </div>
 
+    @if(Auth::user()->role === 'MARKETING')
     <div class="bg-white shadow rounded-xl p-6 border mt-6">
         @if($po->status === 'REJECTED')
             <h2 class="text-lg font-semibold mb-4">Catatan</h2>
@@ -226,6 +227,7 @@
             <p class="text-gray-500">Belum ada catatan atau bukti transfer.</p>
         @endif
     </div>
+    @endif
 
     @can('finance-actions')
     <div class="bg-white shadow rounded-xl p-6 border mt-6">

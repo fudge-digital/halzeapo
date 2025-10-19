@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
         Route::put('/purchase-orders/{po}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
         Route::get('/purchase-orders/{po}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
+        Route::delete('/purchase-orders/{po}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
     });
 
     // custom actions
