@@ -149,7 +149,7 @@
 
             document.getElementById('confirmDelete').addEventListener('click', function() {
                 if (deleteFormId) {
-                document.getElementById('delete-form-' + deleteFormId).submit();
+                document.getElementById('delete-po-' + deleteFormId).submit();
                 }
             });
         </script>
