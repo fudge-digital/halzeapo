@@ -18,13 +18,9 @@
     </div>
 
     <p><strong>No SPK:</strong> {{ $po->no_spk ?? '-' }}</p>
-    <p><strong>No Invoice:</strong> {{ $po->no_invoice ?? '-' }}</p>
     <p><strong>Status Produksi:</strong> {{ str_replace('_',' ', $po->production_status) ?? '-' }}</p>
-    <p><strong>Tanggal Kirim:</strong> {{ optional($po->tanggal_kirim)->format('d-m-Y') ?? '-' }}</p>
-    <p><strong>Alamat Pengiriman:</strong> {{ $po->alamat_pengiriman ?? '-' }}</p>
-
-    <p style="text-align:right;"><strong>Customer:</strong> {{ $po->customer }}</p>
-    <p style="text-align:right;"><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
+    <p><strong>Customer:</strong> {{ $po->customer }}</p>
+    <p><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
 
     <table>
         <colgroup>
