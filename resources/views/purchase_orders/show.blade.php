@@ -18,9 +18,21 @@
                 Finance Invoice
             </a>
             @endif
+            @if(in_array(Auth::user()->role, ['FINANCE','MARKETING']))
             <a href="{{ route('purchase-orders.invoice.customer', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                 Customer Invoice
             </a>
+            @endif
+            @if(Auth::user()->role === 'PRODUKSI' && $po->production_status === 'DONE_PRODUCTION')
+            <a href="{{ route('purchase-orders.order.produksi', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Order Produksi PDF
+            </a>
+            @endif
+            @if(Auth::user()->role === 'SHIPPER' && $po->production_status === 'DONE_PRODUCTION')
+            <a href="{{ route('purchase-orders.customer.order', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Order Produksi PDF
+            </a>
+            @endif
         </div>
     </div>
 

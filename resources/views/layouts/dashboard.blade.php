@@ -46,12 +46,6 @@
         <!-- Navigation -->
         <nav class="flex-1 p-4">
             <ul class="space-y-2">
-                <li>
-                    <a href="{{ route('dashboard') }}" class="relative bg-gray-200 block px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase hover:bg-black hover:text-white">Home</a>
-                </li>
-                <li>
-                    <a href="#" class="relative bg-gray-200 block px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase hover:bg-black hover:text-white">Customer</a>
-                </li>
                 @php
                     use Illuminate\Support\Facades\Auth;
                     use App\Models\PurchaseOrder;
@@ -74,6 +68,14 @@
                         $badgeCount = PurchaseOrder::where('shipping_status', 'READY_TO_SHIP')->count();
                     }
                 @endphp
+                <li>
+                    <a href="{{ route('dashboard') }}" class="relative bg-gray-200 block px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase hover:bg-black hover:text-white">Home</a>
+                </li>
+                @if(in_array(Auth::user()->role, ['MARKETING','FINANCE']))
+                <li>
+                    <a href="#" class="relative bg-gray-200 block px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase hover:bg-black hover:text-white">Customer</a>
+                </li>
+                @endif
                 <li>
                     <a href="{{ route('purchase-orders.index') }}" class="relative bg-gray-200 block px-4 py-2 rounded-lg text-xs font-bold tracking-wider uppercase hover:bg-black hover:text-white">Purchase Order
                         @if($badgeCount > 0)

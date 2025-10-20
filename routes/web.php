@@ -60,6 +60,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/purchase-orders/{po}/export-pdf', [PurchaseOrderController::class, 'exportPdf'])->name('purchase-orders.export.pdf');
 
     Route::get('/purchase-orders/{po}/invoice-customer', [PurchaseOrderController::class, 'invoiceCustomer'])->name('purchase-orders.invoice.customer');
+    Route::get('/purchase-orders/{po}/customer-order', [PurchaseOrderController::class, 'CustomerOrder'])->name('purchase-orders.customer.order');
+    Route::get('/purchase-orders/{po}/order-produksi', [PurchaseOrderController::class, 'OrderProduksi'])->name('purchase-orders.order.produksi');
 
 });
 

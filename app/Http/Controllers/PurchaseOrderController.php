@@ -25,7 +25,7 @@ class PurchaseOrderController extends Controller
         // contoh: marketing sees own, finance sees all, produksi sees approved
         if ($user->role === 'MARKETING') {
             $pos = PurchaseOrder::with('items')->where('created_by', $user->id)->latest()->paginate(10);
-        } elseif ($user->role === 'PRODUKSI') {
+        } elseif (in_array($user->role, ['PRODUKSI', 'SHIPPER'])) {
             $pos = PurchaseOrder::with('items')->where('status', PurchaseOrder::STATUS_APPROVED)->latest()->paginate(10);
         } else {
             $pos = PurchaseOrder::with('items')->latest()->paginate(10);
@@ -521,34 +521,34 @@ class PurchaseOrderController extends Controller
     // -----------------------
     // EXPORT PDF
     // -----------------------
-    public function exportPdf(PurchaseOrder $po)
-    {
-        $user = auth()->user();
+    // public function exportPdf(PurchaseOrder $po)
+    // {
+    //     $user = auth()->user();
 
-        if ($user->hasRole('MARKETING')) {
-            $view = 'pdf.marketing';
-            $prefix = 'MARKETING';
-        } elseif ($user->hasRole('FINANCE')) {
-            $view = 'pdf.finance';
-            $prefix = 'FINANCE';
-        } elseif ($user->hasRole('PRODUKSI')) {
-            $view = 'pdf.produksi';
-            $prefix = 'PRODUKSI';
-        } elseif ($user->hasRole('SHIPPER')) {
-            $view = 'pdf.shipper';
-            $prefix = 'SHIPPER';
-        } else {
-            $view = 'pdf.default';
-            $prefix = 'PO';
-        }
+    //     if ($user->hasRole('MARKETING')) {
+    //         $view = 'pdf.marketing';
+    //         $prefix = 'MARKETING';
+    //     } elseif ($user->hasRole('FINANCE')) {
+    //         $view = 'pdf.finance';
+    //         $prefix = 'FINANCE';
+    //     } elseif ($user->hasRole('PRODUKSI')) {
+    //         $view = 'pdf.produksi';
+    //         $prefix = 'PRODUKSI';
+    //     } elseif ($user->hasRole('SHIPPER')) {
+    //         $view = 'pdf.shipper';
+    //         $prefix = 'SHIPPER';
+    //     } else {
+    //         $view = 'pdf.default';
+    //         $prefix = 'PO';
+    //     }
 
-        $pdf = \PDF::loadView($view, compact('po', 'user'))
-            ->setPaper('A4', 'landscape');
+    //     $pdf = \PDF::loadView($view, compact('po', 'user'))
+    //         ->setPaper('A4', 'landscape');
         
-        $filename = $prefix . "-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
+    //     $filename = $prefix . "-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
 
-        return $pdf->download($filename);
-    }
+    //     return $pdf->download($filename);
+    // }
 
     public function invoiceCustomer(PurchaseOrder $po)
     {
@@ -564,6 +564,40 @@ class PurchaseOrderController extends Controller
             ->setPaper('A4', 'landscape');
 
         $filename = "INVOICE-CUSTOMER-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
+
+        return $pdf->download($filename);
+    }
+    public function OrderProduksi(PurchaseOrder $po)
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('PRODUKSI')) {
+            $view = 'pdf.produksi';
+        } else {
+            $view = 'pdf.default';
+        }
+
+        $pdf = \PDF::loadView($view, compact('po', 'user'))
+            ->setPaper('A4', 'landscape');
+
+        $filename = "ORDER-PRODUKSI-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
+
+        return $pdf->download($filename);
+    }
+    public function CustomerOrder(PurchaseOrder $po)
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('SHIPPER')) {
+            $view = 'pdf.shipper';
+        } else {
+            $view = 'pdf.default';
+        }
+
+        $pdf = \PDF::loadView($view, compact('po', 'user'))
+            ->setPaper('A4', 'landscape');
+
+        $filename = "CUSTOMER-ORDER-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
 
         return $pdf->download($filename);
     }
