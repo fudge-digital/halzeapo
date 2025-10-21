@@ -198,8 +198,8 @@ class PurchaseOrderController extends Controller
             }
 
             // Sisa masing-masing
-            $sisaHPP = max($totalHpp - ($downPayment * $totalHargaJual), 0);
-            $sisaHargaJual = max($totalHargaJual - ($downPayment * $totalhargajual), 0);
+            $sisaHPP = max($totalHpp - ($downPaymentHpp * $totalHargaJual), 0);
+            $sisaHargaJual = max($totalHargaJual - ($downPaymentHargaJual * $totalhargajual), 0);
 
             $po->update([
                 'total_hpp' => $totalHpp,
@@ -381,8 +381,8 @@ class PurchaseOrderController extends Controller
             }
 
             // Sisa masing-masing
-            $sisaHPP = max($totalHpp - ($downPayment * $totalHargaJual), 0);
-            $sisaHargaJual = max($totalHargaJual - ($downPayment * $totalhargajual), 0);
+            $sisaHPP = max($totalHpp - ($downPaymentHpp * $totalHargaJual), 0);
+            $sisaHargaJual = max($totalHargaJual - ($downPaymentHargaJual * $totalhargajual), 0);
 
             $po->update([
                 'total_hpp' => $totalHpp,
