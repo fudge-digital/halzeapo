@@ -78,6 +78,9 @@
                         {{ str_replace('_',' ', $po->production_status) ?? 'N/A' }}
                     </span>
                 </div>
+                <div class="mt-2 text-right">
+                    <span id="visual_substatus_display"></span>
+                </div>
                 <div class="mt-2">
                     @if($po->production_status === 'DONE_PRODUCTION')
                     <span>Status Shipping: </span>
@@ -379,23 +382,29 @@
 
 
     <!-- PRODUCTION SELECT ACTIONS -->
-
     @can('production-actions')
     <div class="mt-6">
         {{-- Card status produksi saat ini --}}
         @if($po->production_status)
             <div class="mb-4 p-4 bg-gray-100 rounded border shadow-sm">
-                <p class="font-medium">Status Produksi saat ini: 
+                <p class="font-medium">
+                    Status Produksi saat ini: 
                     <span class="font-bold text-xs py-1 px-2 bg-green-100 text-green-800 rounded">
                         {{ str_replace('_',' ', $po->production_status) }}
                     </span>
                 </p>
+
+                {{-- Area sub status --}}
+                <div class="mt-1 text-sm text-gray-700 border-l-4 border-green-300 pl-3">
+                    Tahap saat ini: <span id="visual_substatus_display" class="mt-1 text-sm text-gray-700 border-l-4 border-green-300 pl-3"></span>
+                </div>
+
                 @if($po->production_status === 'PENDING_PRODUCTION' && $po->production_note)
                     <p class="mt-1 text-gray-700">Catatan Produksi: {{ $po->production_note }}</p>
                 @endif
                 
-                @if($po->production_status === 'QUEUE_PRODUCTION' || $po->production_status === 'IN_PRODUCTION' || $po->production_status === 'PENDING_PRODUCTION')
-                <button type="button" id="edit_production_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status Produksi</button>
+                @if(in_array($po->production_status, ['QUEUE_PRODUCTION', 'IN_PRODUCTION', 'PENDING_PRODUCTION']))
+                    <button type="button" id="edit_production_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status Produksi</button>
                 @endif
             </div>
         @endif
@@ -416,6 +425,21 @@
                 @error('production_status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
+            {{-- Sub-status visual hanya muncul jika IN_PRODUCTION --}}
+            <div id="sub_production_container" class="mb-4" style="display:none;">
+                <label class="block font-medium text-gray-700">Sub Status Produksi</label>
+                <select id="sub_production_status" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
+                    <option value="">-- Pilih Sub Status --</option>
+                    <option value="PROSES_PRINT">Proses Print</option>
+                    <option value="SELESAI_PRINT">Selesai Print</option>
+                    <option value="PROSES_PRESS">Proses Press</option>
+                    <option value="SELESAI_PRESS">Selesai Press</option>
+                    <option value="PROSES_JAHIT">Proses Jahit</option>
+                    <option value="SELESAI_JAHIT">Selesai Jahit</option>
+                </select>
+                <p id="substatus_timestamp" class="text-xs text-gray-600 mt-2 hidden"></p>
+            </div>
+
             {{-- Catatan produksi --}}
             <div id="production_note_container" class="mb-4" style="display:none;">
                 <label for="production_note" class="block font-medium text-gray-700">Catatan Produksi</label>
@@ -430,26 +454,29 @@
         </form>
     </div>
 
-
-
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const productionSelect = document.getElementById('production_status');
         const noteContainer = document.getElementById('production_note_container');
+        const subContainer = document.getElementById('sub_production_container');
+        const subSelect = document.getElementById('sub_production_status');
+        const subTimestamp = document.getElementById('substatus_timestamp');
         const editBtn = document.getElementById('edit_production_status_btn');
         const cancelBtn = document.getElementById('cancel_production_btn');
         const productionForm = document.getElementById('production_form');
+        const visualDisplay = document.getElementById('visual_substatus_display');
 
-        function toggleNote() {
-            if (productionSelect.value === 'PENDING_PRODUCTION') {
-                noteContainer.style.display = 'block';
-            } else {
-                noteContainer.style.display = 'none';
-            }
+        function toggleNoteAndSub() {
+            noteContainer.style.display = (productionSelect.value === 'PENDING_PRODUCTION') ? 'block' : 'none';
+            subContainer.style.display = (productionSelect.value === 'IN_PRODUCTION') ? 'block' : 'none';
         }
 
-        toggleNote();
-        productionSelect.addEventListener('change', toggleNote);
+        // Simpan visual substatus dan timestamp di memori browser (bukan DB)
+        let currentSubStatus = null;
+        let currentTimestamp = null;
+
+        toggleNoteAndSub();
+        productionSelect.addEventListener('change', toggleNoteAndSub);
 
         if(editBtn) {
             editBtn.addEventListener('click', function() {
@@ -466,10 +493,70 @@
                 }
             });
         }
+
+        const poKey = 'substatus_po_{{ $po->id }}';
+
+        function formatSubstatus(text) {
+            return text
+                .toLowerCase()
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        function getSubstatusColor(substatus) {
+            if (substatus.startsWith('SELESAI_')) {
+                return 'bg-green-100 text-green-700';
+            } else if (substatus.startsWith('PROSES_')) {
+                return 'bg-yellow-100 text-yellow-700';
+            }
+            return 'bg-gray-100 text-gray-700';
+        }
+
+        // Saat memilih sub status
+        subSelect.addEventListener('change', function() {
+            const selected = subSelect.value;
+            if (selected.startsWith('SELESAI_')) {
+                const now = new Date();
+                const formatted = now.toLocaleString('id-ID');
+                subTimestamp.textContent = `Selesai pada: ${formatted}`;
+                subTimestamp.classList.remove('hidden');
+                currentTimestamp = formatted;
+            } else {
+                subTimestamp.classList.add('hidden');
+                currentTimestamp = null;
+            }
+            currentSubStatus = selected;
+
+            const colorClass = getSubstatusColor(selected);
+            const displayText = selected 
+                ? `<span class="font-medium text-xs px-2 py-1 rounded ${colorClass}">${formatSubstatus(selected)}</span>` + 
+                (currentTimestamp ? ` <span class="text-xs text-gray-500">(${currentTimestamp})</span>` : '')
+                : '';
+
+            visualDisplay.innerHTML = displayText;
+
+            // Simpan ke localStorage agar muncul di list
+            localStorage.setItem(poKey, JSON.stringify({
+                substatus: selected,
+                timestamp: currentTimestamp
+            }));
+        });
+
+        // Saat halaman dimuat, tampilkan dari localStorage
+        const stored = localStorage.getItem(poKey);
+        if (stored) {
+            const { substatus, timestamp } = JSON.parse(stored);
+            if (substatus) {
+                const colorClass = getSubstatusColor(substatus);
+                visualDisplay.innerHTML = `<span class="font-medium text-xs px-2 py-1 rounded ${colorClass}">${formatSubstatus(substatus)}</span>` +
+                    (timestamp ? ` <span class="text-xs text-gray-500">(${timestamp})</span>` : '');
+            }
+        }
+
     });
     </script>
     @endcan
-
     <!-- END PRODUCTION SELECT ACTIONS -->
 
     <!-- SHIPPING SELECT ACTION -->
