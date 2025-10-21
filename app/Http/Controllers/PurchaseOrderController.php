@@ -187,7 +187,7 @@ class PurchaseOrderController extends Controller
             $downPaymentHpp = 0;
 
             // Hitung nilai nominal down payment (dalam rupiah)
-            if ($downPaymentType === 'persen') {
+            if ($downPaymentType === 'persen' || $downPaymentType === 'percent') {
                 // Jika persen, konversi ke nominal berdasarkan total harga jual
                 $downPaymentHargaJual = ($totalHargaJual * $downPaymentInput) / 100;
                 $downPaymentHpp = ($totalHpp * $downPaymentInput) / 100;
@@ -198,8 +198,8 @@ class PurchaseOrderController extends Controller
             }
 
             // Sisa masing-masing
-            $sisaHPP = max($totalHpp - $downPaymentHpp, 0);
-            $sisaHargaJual = max($totalHargaJual - $downPaymentHargaJual, 0);
+            $sisaHPP = max($totalHpp - ($downPayment * $totalHargaJual), 0);
+            $sisaHargaJual = max($totalHargaJual - ($downPayment * $totalhargajual), 0);
 
             $po->update([
                 'total_hpp' => $totalHpp,

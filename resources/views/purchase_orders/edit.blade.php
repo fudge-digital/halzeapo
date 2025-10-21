@@ -390,11 +390,41 @@ function purchaseOrderForm(existingData = null) {
                 : this.downPayment;
         },
 
+        parseDP() {
+            const v = parseFloat(this.downPayment);
+            return isNaN(v) ? 0 : v;
+        },
+
+        // 🔹 DP dalam nominal (Rupiah)
+        get downPaymentValue() {
+            const dp = this.parseDP();
+            if (this.dpType === 'persen') {
+                // Jika persen → hitung dari totalHargaJual
+                return (this.totalHargaJualAll * (dp / 100)) || 0;
+            }
+            // Jika nominal → pakai langsung
+            return dp;
+        },
+
         get sisaHPP() {
-            return Math.max(this.totalHPPAll - this.downPaymentHPP, 0);
+            const dp = this.parseDP();
+
+            if (this.dpType === 'persen') {
+                // Persen: kurangi berdasarkan totalHargaJual × persentase
+                return Math.max(this.totalHPPAll - (this.totalHargaJualAll * (dp / 100)), 0);
+            }
+
+            // Nominal: kurangi langsung nilai DP
+            return Math.max(this.totalHPPAll - dp, 0);
         },
         get sisaHargaJual() {
-            return Math.max(this.totalHargaJualAll - this.downPaymentHargaJual, 0);
+            const dp = this.parseDP();
+
+            if (this.dpType === 'persen') {
+                return Math.max(this.totalHargaJualAll - (this.totalHargaJualAll * (dp / 100)), 0);
+            }
+
+            return Math.max(this.totalHargaJualAll - dp, 0);
         },
 
         // ===== Display Formatting =====
