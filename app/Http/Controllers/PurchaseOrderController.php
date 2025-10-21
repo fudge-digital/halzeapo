@@ -343,6 +343,25 @@ class PurchaseOrderController extends Controller
                 }
             }
 
+            // Bukti Transfer DP
+            $request->validate([
+                'bukti_transfer_dp' => 'file|mimes:pdf,jpg,png',
+            ]);
+
+            if ($request->hasFile('bukti_transfer_dp')) {
+                $file = $request->file('bukti_transfer_dp');
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                $destination = public_path(env('UPLOAD_PATH_BUKTI_DP', 'uploads/bukti_transfer_dp'));
+
+                if (!file_exists($destination)) {
+                    mkdir($destination, 0755, true);
+                }
+
+                $file->move($destination, $filename);
+                $po->bukti_transfer_dp = 'uploads/bukti_transfer_dp/' . $filename;
+            }
+
             // Recalculate DP & sisa
             $downPaymentType = $request->input('down_payment_type', 'nominal');
             $downPaymentInput = floatval($request->input('down_payment', 0));

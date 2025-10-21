@@ -88,11 +88,20 @@
                                 Detail
                             </a>
                             @if(Auth::user()->role === 'MARKETING')
-                            <a href="{{ route('purchase-orders.edit', $po->id) }}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition">
+                            @if($po->status === 'APPROVED_FINANCE')
+                                <a href="#"
+                                class="inline-flex items-center px-3 py-1 bg-gray-400 text-white text-xs font-medium rounded cursor-not-allowed"
+                                onclick="return false;">
                                 Edit
-                            </a>
+                                </a>
+                            @else
+                                <a href="{{ route('purchase-orders.edit', $po->id) }}"
+                                class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition">
+                                Edit
+                                </a>
                             @endif
-                            @if(Auth::user()->role === 'MARKETING')
+                            @endif
+                            @if(Auth::user()->role === 'FINANCE')
                             <a href="#" class="inline-flex items-center px-3 py-1 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition" onclick="openDeleteModal({{ $po->id }})">
                                 Hapus
                             </a>
