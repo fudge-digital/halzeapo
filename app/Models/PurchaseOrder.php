@@ -34,6 +34,7 @@ class PurchaseOrder extends Model
         'approved_by',
         'produced_by',
         'shipped_by',
+        'bukti_transfer_dp',
         'bukti_transfer',
         'rejected_note',
         'production_note',

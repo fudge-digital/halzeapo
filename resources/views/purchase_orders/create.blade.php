@@ -207,6 +207,12 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 gap-6 mt-4">
+            <label for="bukti_transfer_dp" class="block font-medium text-gray-700">Upload Bukti Transfer DP</label>
+            <input type="file" name="bukti_transfer_dp" id="bukti_transfer_dp" class="mt-1 block w-full border-gray-300 rounded">
+            @error('bukti_transfer') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+        </div>
+
         {{-- Tombol Submit --}}
         <div class="mt-6">
             <button type="submit"
