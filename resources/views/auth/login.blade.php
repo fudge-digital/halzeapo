@@ -37,10 +37,19 @@
                 </div>
 
                 {{-- Password --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" type="password" name="password" required
-                        class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <div x-data="{ show: false }" class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+
+                    <input :type="show ? 'text' : 'password'" id="password" name="password" required
+                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+
+                    <!-- Tombol show/hide di luar input kanan bawah -->
+                    <button type="button"
+                        @click="show = !show"
+                        class="absolute -bottom-6 right-0 text-xs text-gray-700 mt-1 mb-1 hover:text-black hover:font-medium focus:outline-none">
+                        <span x-text="show ? 'Hide password' : 'Show password'"></span>
+                    </button>
+
                     @error('password')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
