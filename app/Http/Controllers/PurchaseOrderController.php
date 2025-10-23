@@ -179,32 +179,39 @@ class PurchaseOrderController extends Controller
                 $totalHargaJual += $total_harga_jual_item;
             }
 
-            // Recalculate DP & sisa
+            // ambil input dasar
             $downPaymentType = $request->input('down_payment_type', 'nominal');
             $downPaymentInput = floatval($request->input('down_payment', 0));
 
             $downPaymentHargaJual = 0;
             $downPaymentHpp = 0;
+            $downPaymentPercent = 0;
 
-            // Hitung nilai nominal down payment (dalam rupiah)
+            // Hitung nilai nominal dan persen
             if ($downPaymentType === 'persen' || $downPaymentType === 'percent') {
-                // Jika persen, konversi ke nominal berdasarkan total harga jual
+                // Jika input dalam persen, konversi ke nominal berdasarkan total harga jual
+                $downPaymentPercent = $downPaymentInput;
                 $downPaymentHargaJual = ($totalHargaJual * $downPaymentInput) / 100;
                 $downPaymentHpp = ($totalHpp * $downPaymentInput) / 100;
             } else {
-                // Jika nominal langsung
+                // Jika input nominal, hitung juga berapa persen terhadap total harga jual
                 $downPaymentHargaJual = $downPaymentInput;
                 $downPaymentHpp = $downPaymentInput;
+                $downPaymentPercent = $totalHargaJual > 0
+                    ? ($downPaymentInput / $totalHargaJual) * 100
+                    : 0;
             }
 
-            // Sisa masing-masing
-            $sisaHPP = max($totalHpp - ($downPaymentHpp * $totalHargaJual), 0);
-            $sisaHargaJual = max($totalHargaJual - ($downPaymentHargaJual * $totalHargaJual), 0);
+            // Hitung sisa masing-masing
+            $sisaHPP = max($totalHpp - ($downPaymentPercent / 100 * $totalHargaJual), 0);
+            $sisaHargaJual = max($totalHargaJual - ($downPaymentPercent / 100 * $totalHargaJual), 0);
+
 
             $po->update([
                 'total_hpp' => $totalHpp,
                 'total_harga_jual' => $totalHargaJual,
-                'down_payment' => round($downPaymentHpp, 2),
+                'down_payment' => round($downPaymentHargaJual, 2),
+                'down_payment_percent' => round($downPaymentPercent, 2),
                 'down_payment_type' => $downPaymentType,
                 'sisa_pembayaran_hpp' => round($sisaHPP, 2),
                 'sisa_pembayaran_hargajual' => round($sisaHargaJual, 2)
@@ -362,32 +369,38 @@ class PurchaseOrderController extends Controller
                 $po->bukti_transfer_dp = 'uploads/bukti_transfer_dp/' . $filename;
             }
 
-            // Recalculate DP & sisa
+            // ambil input dasar
             $downPaymentType = $request->input('down_payment_type', 'nominal');
             $downPaymentInput = floatval($request->input('down_payment', 0));
 
             $downPaymentHargaJual = 0;
             $downPaymentHpp = 0;
+            $downPaymentPercent = 0;
 
-            // Hitung nilai nominal down payment (dalam rupiah)
+            // Hitung nilai nominal dan persen
             if ($downPaymentType === 'persen' || $downPaymentType === 'percent') {
-                // Jika persen, konversi ke nominal berdasarkan total harga jual
+                // Jika input dalam persen, konversi ke nominal berdasarkan total harga jual
+                $downPaymentPercent = $downPaymentInput;
                 $downPaymentHargaJual = ($totalHargaJual * $downPaymentInput) / 100;
                 $downPaymentHpp = ($totalHpp * $downPaymentInput) / 100;
             } else {
-                // Jika nominal langsung
+                // Jika input nominal, hitung juga berapa persen terhadap total harga jual
                 $downPaymentHargaJual = $downPaymentInput;
                 $downPaymentHpp = $downPaymentInput;
+                $downPaymentPercent = $totalHargaJual > 0
+                    ? ($downPaymentInput / $totalHargaJual) * 100
+                    : 0;
             }
 
-            // Sisa masing-masing
-            $sisaHPP = max($totalHpp - ($downPaymentHpp * $totalHargaJual), 0);
-            $sisaHargaJual = max($totalHargaJual - ($downPaymentHargaJual * $totalHargaJual), 0);
+            // Hitung sisa masing-masing
+            $sisaHPP = max($totalHpp - ($downPaymentPercent / 100 * $totalHargaJual), 0);
+            $sisaHargaJual = max($totalHargaJual - ($downPaymentPercent / 100 * $totalHargaJual), 0);
 
             $po->update([
                 'total_hpp' => $totalHpp,
                 'total_harga_jual' => $totalHargaJual,
                 'down_payment' => round($downPaymentHpp, 2),
+                'down_payment_percent' => round($downPaymentPercent, 2),
                 'down_payment_type' => $downPaymentType,
                 'sisa_pembayaran_hpp' => round($sisaHPP, 2),
                 'sisa_pembayaran_hargajual' => round($sisaHargaJual, 2)
