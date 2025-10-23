@@ -258,16 +258,15 @@
         <div class="grid grid-cols-2 gap-6 mt-4">
             <div>
                 <label>Sisa Pembayaran (HPP)</label>
-                <input type="text" x-model="sisaHPPDisplay"
-                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
-                <input type="hidden" name="sisa_pembayaran_hpp" :value="sisaHPP">
+                <input type="text" x-model="sisaHPPDisplay" class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
+                <input type="hidden" name="sisa_pembayaran_hpp" x-effect="$el.value = sisaHPP">
             </div>
 
             <div>
                 <label>Sisa Pembayaran (Harga Jual)</label>
                 <input type="text" x-model="sisaHargaJualDisplay"
                     class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" readonly>
-                <input type="hidden" name="sisa_pembayaran_hargajual" :value="sisaHargaJual">
+                <input type="hidden" name="sisa_pembayaran_hargajual" x-effect="$el.value = sisaHargaJual">
             </div>
         </div>
 

@@ -191,7 +191,6 @@
         <!-- Payment Info -->
         @if(!in_array(Auth::user()->role, ['PRODUKSI','SHIPPER']))
         <div class="mt-8 space-y-8 text-sm text-right">
-            {{-- Total Harga Jual --}}
             {{-- Down Payment --}}
             <div class="grid grid-cols-3 gap-4 items-center border-t pt-4">
                 <div class="col-span-1 text-gray-500"></div>
@@ -199,15 +198,11 @@
                     <h3 class="text-md font-semibold text-gray-700">Down Payment</h3>
                 </div>
                 <div class="col-span-1 font-medium">
-                    @if ($po->down_payment_type === 'persen')
-                        @php
-                            $persenDPHPP = $po->total_hpp > 0 
-                                ? round(($po->down_payment / $po->total_hpp) * 100, 2)
-                                : 0;
-                        @endphp
-                        {{ $persenDPHPP }}%
+                    @if ($po->down_payment > 0)
+                        <div class="pr-5">{{ $po->down_payment_percent }}%</div> 
+                        <span class="text-gray-500 text-xs">(Rp {{ number_format($po->down_payment, 0, ',', '.') }})</span>
                     @else
-                        Rp {{ number_format($po->down_payment, 0, ',', '.') }}
+                        Rp 0
                     @endif
                 </div>
             </div>
