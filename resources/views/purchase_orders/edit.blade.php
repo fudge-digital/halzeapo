@@ -121,7 +121,7 @@
                                 <option value="Ya">Ya</option>
                                 <option value="Tidak">Tidak</option>
                             </select>
-                            <textarea class="w-full rounded-md border-gray-300 mt-1"
+                            <textarea x-cloak class="w-full rounded-md border-gray-300 mt-1"
                                     :name="`items[${index}][fqc_us_note]`"
                                     x-show="item.fqc_us === 'Ya'"
                                     x-model="item.fqc_us_note"
@@ -139,7 +139,7 @@
                                 <option value="Ya">Ya</option>
                                 <option value="Tidak">Tidak</option>
                             </select>
-                            <textarea class="w-full rounded-md border-gray-300 mt-1"
+                            <textarea x-cloak class="w-full rounded-md border-gray-300 mt-1"
                                     :name="`items[${index}][fqc_la_note]`"
                                     x-show="item.fqc_la === 'Ya'"
                                     x-model="item.fqc_la_note"
@@ -157,7 +157,7 @@
                                 <option value="Ya">Ya</option>
                                 <option value="Tidak">Tidak</option>
                             </select>
-                            <textarea class="w-full rounded-md border-gray-300 mt-1"
+                            <textarea x-cloak class="w-full rounded-md border-gray-300 mt-1"
                                     :name="`items[${index}][fqc_jt_note]`"
                                     x-show="item.fqc_jt === 'Ya'"
                                     x-model="item.fqc_jt_note"
@@ -270,6 +270,22 @@
             </div>
         </div>
 
+        <div>
+            <div class="flex items-top justify-between grid grid-cols-2 bg-white shadow rounded-xl p-6 border mt-6">
+                <div>
+                    <h2 class="text-lg font-semibold">Bukti Transfer DP</h2>
+                    @if($po->bukti_transfer_dp)        
+                        <p class="text-gray-700">
+                            <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer_dp) }}')" target="_blank" class="bg-blue-600 py-2 px-4 rounded text-white text-sm ">Lihat Bukti Transfer DP</button>
+                        </p>
+                    @else
+                        <div class="text-gray-500 mb-2 text-sm">Belum upload bukti transfer DP</div>
+                        <input type="file" name="bukti_transfer_dp" accept="image/png,image/jpeg" class="mt-1 block w-full text-sm text-gray-600">
+                    @endif
+                </div>
+            </div>
+        </div>
+
         {{-- Tombol Submit --}}
         <div class="mt-6">
             <button type="submit"
@@ -334,10 +350,16 @@ function purchaseOrderForm(existingData = null) {
             po_print: i.po_print || '',
             po_press: i.po_press || '',
             po_press_print: i.po_press_print || '',
-            fqc_us: i.fqc_us_option || '',
-            fqc_la: i.fqc_la_option || '',
-            fqc_jt: i.fqc_jt_option || '',
+            // 🔧 Perbaikan di sini
+            fqc_us: i.fqc_us || '',
+            fqc_la: i.fqc_la || '',
+            fqc_jt: i.fqc_jt || '',
+            fqc_us_note: i.fqc_us_note || '',
+            fqc_la_note: i.fqc_la_note || '',
+            fqc_jt_note: i.fqc_jt_note || '',
         }));
+
+        console.log('existingData', existingData);
     }
 
     return {

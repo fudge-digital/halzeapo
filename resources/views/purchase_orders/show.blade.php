@@ -232,40 +232,38 @@
         @endif
     </div>
 
-    @if(Auth::user()->role === 'MARKETING')
+    
     <div>
         <div class="flex items-top justify-between grid grid-cols-2 bg-white shadow rounded-xl p-6 border mt-6">
+            @if(Auth::user()->role === 'MARKETING')
             <div>
-                <h2 class="text-lg font-semibold mb-4">Catatan / Bukti Transfer Finance</h2>
+                <h2 class="text-lg font-semibold">Catatan / Bukti Transfer Finance</h2>
                 @if($po->status === 'REJECTED')
-                    <h2 class="text-lg font-semibold mb-4">Catatan</h2>
+                    <h2 class="text-lg font-semibold">Catatan</h2>
                     <p class="text-gray-700 whitespace-pre-wrap">{{ $po->rejected_notes ?? 'Tidak ada catatan.' }}</p>
                 @elseif($po->status === 'APPROVED_FINANCE' && $po->bukti_transfer)
-                    <h2 class="text-lg font-semibold mb-4">Bukti Transfer</h2>
+                    <h2 class="text-sm mb-2">Bukti Transfer Finance</h2>
                     <p class="text-gray-700">
-                        <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer) }}')" target="_blank" class="text-gray-600 text-sm font-medium underline">Lihat File</button>
+                        <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer) }}')" target="_blank" class="bg-green-600 py-2 px-4 rounded text-white text-sm ">Lihat File</button>
                     </p>
                 @else
                     <p class="text-gray-500">Belum ada catatan atau bukti transfer Finance.</p>
                 @endif
             </div>
+            @endif
 
             <div>
                 <h2 class="text-lg font-semibold">Bukti Transfer DP</h2>
                 @if($po->bukti_transfer_dp)        
                     <p class="text-gray-700">
-                        <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer_dp) }}')" target="_blank" class="bg-blue-600 py-2 px-4 rounded text-white text-sm font-small">Lihat Bukti Transfer DP</button>
+                        <button type="button" @click="$store.imageModal.show('{{ asset($po->bukti_transfer_dp) }}')" target="_blank" class="bg-blue-600 py-2 px-4 rounded text-white text-sm ">Lihat Bukti Transfer DP</button>
                     </p>
                 @else
                     <div class="text-gray-500 mb-2 text-sm">Belum ada bukti transfer DP</div>
-                    <label for="bukti_transfer_dp" class="block font-medium text-gray-700">Upload Bukti Transfer DP</label>
-                    <input type="file" name="bukti_transfer_dp" id="bukti_transfer_dp" class="mt-1 block w-full border-gray-300 rounded">
-                    @error('bukti_transfer') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 @endif
             </div>
         </div>
     </div>
-    @endif
 
     @can('finance-actions')
     <div class="bg-white shadow rounded-xl p-6 border mt-6">

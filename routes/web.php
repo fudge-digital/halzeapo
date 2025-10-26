@@ -42,7 +42,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
         Route::put('/purchase-orders/{po}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
         Route::get('/purchase-orders/{po}/edit', [PurchaseOrderController::class, 'edit'])->name('purchase-orders.edit');
-        Route::delete('/purchase-orders/{po}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
     });
 
     // custom actions
@@ -52,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
 
     // finance update & upload bukti transfer
     Route::post('purchase-orders/{po}/finance-update', [PurchaseOrderController::class, 'updateFinanceStatus'])->name('purchase-orders.finance.update')->middleware('can:finance-actions');
+    Route::delete('/purchase-orders/{po}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy')->middleware('can:finance-actions');
 
     // SHIPPER update shipping status
     Route::post('purchase-orders/{po}/shipping', [PurchaseOrderController::class, 'updateShippingStatus'])->name('purchase-orders.shipping.update')->middleware('can:shipping-actions'); // gunakan ShippingPolicy
@@ -62,6 +62,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/purchase-orders/{po}/invoice-customer', [PurchaseOrderController::class, 'invoiceCustomer'])->name('purchase-orders.invoice.customer');
     Route::get('/purchase-orders/{po}/customer-order', [PurchaseOrderController::class, 'CustomerOrder'])->name('purchase-orders.customer.order');
     Route::get('/purchase-orders/{po}/order-produksi', [PurchaseOrderController::class, 'OrderProduksi'])->name('purchase-orders.order.produksi');
+
+    Route::get('/purchase-order-logs', [PurchaseOrderController::class, 'logs'])->name('purchase_orders.logs');
 
 });
 

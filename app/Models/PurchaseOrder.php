@@ -84,8 +84,17 @@ class PurchaseOrder extends Model
 
     public static function generatePreviewNoSpk()
     {
-        $lastPo = self::latest('id')->first();
-        $nextNumber = $lastPo ? $lastPo->id + 1 : 1;
+        $lastPo = self::select('no_spk')
+            ->where('no_spk', 'like', 'PO.%')
+            ->orderByRaw("CAST(REGEXP_SUBSTR(no_spk, '[0-9]+') AS UNSIGNED) DESC")
+            ->first();
+
+        if ($lastPo && preg_match('/PO\.(\d+)\//', $lastPo->no_spk, $matches)) {
+            $lastNumber = (int)$matches[1];
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
 
         $bulanRomawi = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV',

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\PurchaseOrderLog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Log;
@@ -179,6 +180,25 @@ class PurchaseOrderController extends Controller
                 $totalHargaJual += $total_harga_jual_item;
             }
 
+            // Bukti Transfer DP
+            $request->validate([
+                'bukti_transfer_dp' => 'file|mimes:pdf,jpg,png',
+            ]);
+
+            if ($request->hasFile('bukti_transfer_dp')) {
+                $file = $request->file('bukti_transfer_dp');
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                $destination = public_path(env('UPLOAD_PATH_BUKTI_DP', 'uploads/bukti_transfer_dp'));
+
+                if (!file_exists($destination)) {
+                    mkdir($destination, 0755, true);
+                }
+
+                $file->move($destination, $filename);
+                $po->bukti_transfer_dp = 'uploads/bukti_transfer_dp/' . $filename;
+            }
+
             // ambil input dasar
             $downPaymentType = $request->input('down_payment_type', 'nominal');
             $downPaymentInput = floatval($request->input('down_payment', 0));
@@ -215,6 +235,17 @@ class PurchaseOrderController extends Controller
                 'down_payment_type' => $downPaymentType,
                 'sisa_pembayaran_hpp' => round($sisaHPP, 2),
                 'sisa_pembayaran_hargajual' => round($sisaHargaJual, 2)
+            ]);
+
+            $oldData = $po->getOriginal();
+            $newData = $po->getAttributes();
+
+            PurchaseOrderLog::create([
+                'purchase_order_id' => $po->id,
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'old' => $oldData,
+                'new' => $newData,
             ]);
 
             DB::commit();
@@ -276,8 +307,19 @@ class PurchaseOrderController extends Controller
         DB::beginTransaction();
         try {
             // generate no_spk reliably
-            $lastPo = PurchaseOrder::latest('id')->lockForUpdate()->first();
-            $nextNumber = $lastPo ? $lastPo->id + 1 : 1;
+            $lastPo = PurchaseOrder::select('no_spk')
+                ->lockForUpdate()
+                ->where('no_spk', 'like', 'PO.%')
+                ->orderByRaw("CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(no_spk, '/', 1), '.', -1) AS UNSIGNED) DESC")
+                ->first();
+
+            if ($lastPo && preg_match('/PO\.(\d+)\//', $lastPo->no_spk, $matches)) {
+                $lastNumber = (int)$matches[1];
+                $nextNumber = $lastNumber + 1;
+            } else {
+                $nextNumber = 1;
+            }
+            
             $bulanRomawi = [1=>'I',2=>'II',3=>'III',4=>'IV',5=>'V',6=>'VI',7=>'VII',8=>'VIII',9=>'IX',10=>'X',11=>'XI',12=>'XII'];
 
             $no_spk = $request->input('no_spk') ?? sprintf("PO.%05d/HZ/%s/%d", $nextNumber, $bulanRomawi[now()->month], now()->year);
@@ -404,6 +446,18 @@ class PurchaseOrderController extends Controller
                 'down_payment_type' => $downPaymentType,
                 'sisa_pembayaran_hpp' => round($sisaHPP, 2),
                 'sisa_pembayaran_hargajual' => round($sisaHargaJual, 2)
+            ]);
+
+            // Simpan data lama & baru untuk log
+            $oldData = $po->getOriginal();
+            $newData = $po->getAttributes();
+
+            PurchaseOrderLog::create([
+                'purchase_order_id' => $po->id,
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'old' => $oldData,
+                'new' => $newData,
             ]);
 
             DB::commit();
@@ -637,11 +691,34 @@ class PurchaseOrderController extends Controller
     // DELETE PURCHASE ORDER (MARKETING ONLY)
     public function destroy($id)
     {
+        
         $po = PurchaseOrder::findOrFail($id);
+        PurchaseOrderLog::create([
+            'purchase_order_id' => $po->id,
+            'user_id' => Auth::id(),
+            'action' => 'deleted',
+            'old' => $po->toArray(),
+        ]);
         $po->delete();
 
         return redirect()->route('purchase-orders.index')
                         ->with('success', 'Purchase Order berhasil dihapus.');
+    }
+
+    public function logs()
+    {
+        $user = auth()->user();
+
+        // Hanya SUPER_ADMIN yang boleh
+        if ($user->role !== 'SUPERADMIN') {
+            abort(403, 'Anda tidak memiliki akses untuk melihat log.');
+        }
+
+        $logs = PurchaseOrderLog::with(['purchaseOrder', 'user'])
+            ->latest()
+            ->paginate(20);
+
+        return view('purchase_orders.logs', compact('logs'));
     }
 
 }
