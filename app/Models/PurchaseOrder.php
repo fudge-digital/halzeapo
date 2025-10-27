@@ -31,6 +31,8 @@ class PurchaseOrder extends Model
         'sisa_pembayaran_hargajual',
         'status',
         'production_status',
+        'production_substatus',
+        'production_substatus_at',
         'created_by',
         'approved_by',
         'produced_by',
@@ -44,6 +46,7 @@ class PurchaseOrder extends Model
         'no_invoice',
         'shipping_status',
         'alamat_pengiriman',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -54,7 +57,9 @@ class PurchaseOrder extends Model
         'down_payment_type' => 'string',
         'sisa_pembayaran_hpp' => 'decimal:2',
         'sisa_pembayaran_hargajual' => 'decimal:2',
-        'tanggal_kirim' => 'date',
+        'tanggal_kirim' => 'datetime',
+        'production_substatus_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function items()

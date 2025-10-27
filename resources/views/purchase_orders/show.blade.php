@@ -33,13 +33,13 @@
             </a>
             @endif
             @if(Auth::user()->role === 'PRODUKSI' && $po->production_status === 'DONE_PRODUCTION')
-            <a href="{{ route('purchase-orders.order.produksi', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Order Produksi PDF
+            <a href="{{ route('purchase-orders.order.produksi', $po) }}" class="text-xs px-4 py-2 font-medium bg-green-600 text-white rounded hover:bg-green-700">
+                Generate Production Invoice
             </a>
             @endif
-            @if(Auth::user()->role === 'SHIPPER' && $po->production_status === 'DONE_PRODUCTION')
-            <a href="{{ route('purchase-orders.customer.order', $po) }}" class="text-sm px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Order Produksi PDF
+            @if(Auth::user()->role === 'SHIPPER' && $po->shipping_status === 'DONE_PRODUCTION')
+            <a href="{{ route('purchase-orders.invoice.shipping', $po) }}" class="text-xs px-4 py-2 font-medium bg-green-600 text-white rounded hover:bg-green-700">
+                Generate Shipping Invoice
             </a>
             @endif
         </div>
@@ -51,11 +51,13 @@
             <div>
                 <h1 class="text-xl font-bold">Purchase Order</h1>
                 <p class="text-gray-500 text-sm">Nomor SPK: {{ $po->no_spk }}</p>
+                <p class="text-gray-500 text-sm">No Invoice: <span class="font-medium">{{ $po->no_invoice ?? '-' }}</span></p>
                 <p class="text-gray-500 text-sm">Customer: <span class="font-medium">{{ $po->customer }}</span></p>
                 <p class="text-gray-500 text-sm">Tempat Produksi: <span class="font-medium">{{ $po->tempat_produksi ?? 'N/A' }}</span></p>
             </div>
             <div>
-                <div>
+                @if(in_array(Auth::user()->role, ['FINANCE', 'MARKETING']))
+                <div class="mb-2">
                     <span>Status Finance: </span>
                     <span class="px-3 py-1 rounded-full text-xs font-semibold
                         @if($po->status === 'PENDING_FINANCE') bg-yellow-100 text-yellow-800
@@ -66,7 +68,8 @@
                         {{ str_replace('_',' ', $po->status) ?? 'N/A' }}
                     </span>
                 </div>
-                <div class="mt-2">
+                @endif
+                <div class="mb-2">
                     <span>Status Production: </span>
                     <span class="px-3 py-1 rounded-full text-xs font-semibold
                         @if($po->production_status === 'QUEUE_PRODUCTION') bg-yellow-100 text-yellow-800
@@ -78,20 +81,41 @@
                         {{ str_replace('_',' ', $po->production_status) ?? 'N/A' }}
                     </span>
                 </div>
-                <div class="mt-2 text-right">
-                    <span id="visual_substatus_display"></span>
-                </div>
                 <div class="mt-2">
-                    @if($po->production_status === 'DONE_PRODUCTION')
+                    <span>Tahap Produksi: </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold">
+                        @if($po->production_substatus)
+                            @php
+                                $colorClass = str_starts_with($po->production_substatus, 'SELESAI_')
+                                    ? 'bg-green-100 text-green-700'
+                                    : (str_starts_with($po->production_substatus, 'PROSES_')
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-gray-100 text-gray-700');
+                            @endphp
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold rounded-full {{ $colorClass }}">
+                                {{ str_replace('_', ' ', $po->production_substatus) }} ({{ $po->production_substatus_at ? $po->production_substatus_at->format('d-m-Y') : '-' }})
+                            </span>
+                        @else
+                            @if($po->production_status !== 'DONE_PRODUCTION')
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 uppercase">Belum ada substatus</span>
+                            @else
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 uppercase">All Done</span>
+                            @endif
+                        @endif
+                    </span>
+                </div>
+                @if($po->production_status === 'DONE_PRODUCTION')
+                <div class="mt-2">
                     <span>Status Shipping: </span>
                     <span class="px-3 py-1 rounded-full text-xs font-semibold
                         @if($po->shipping_status === 'READY_TO_SHIP') bg-yellow-100 text-yellow-800
                         @elseif($po->shipping_status === 'SHIPPED') bg-green-100 text-green-800
+                        @else bg-gray-100 text-gray-800
                         @endif">
                         {{ str_replace('_',' ', $po->shipping_status) ?? 'N/A' }}
                     </span>
-                    @endif
                 </div>
+                @endif
             </div>
         </div>
 
@@ -233,6 +257,7 @@
     </div>
 
     
+    @if(in_array(Auth::user()->role, ['FINANCE','MARKETING']))
     <div>
         <div class="flex items-top justify-between grid grid-cols-2 bg-white shadow rounded-xl p-6 border mt-6">
             @if(Auth::user()->role === 'MARKETING')
@@ -264,6 +289,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     @can('finance-actions')
     <div class="bg-white shadow rounded-xl p-6 border mt-6">
@@ -379,36 +405,61 @@
     <div class="mt-6">
         {{-- Card status produksi saat ini --}}
         @if($po->production_status)
-            <div class="mb-4 p-4 bg-gray-100 rounded border shadow-sm">
+            <div class="mb-4 p-4 bg-white shadow rounded-xl border mt-6">
                 <p class="font-medium">
-                    Status Produksi saat ini: 
+                    Status Produksi saat ini:
                     <span class="font-bold text-xs py-1 px-2 bg-green-100 text-green-800 rounded">
-                        {{ str_replace('_',' ', $po->production_status) }}
+                        {{ str_replace('_', ' ', $po->production_status) }}
                     </span>
                 </p>
 
-                {{-- Area sub status --}}
-                <div class="mt-1 text-sm text-gray-700 border-l-4 border-green-300 pl-3">
-                    Tahap saat ini: <span id="visual_substatus_display" class="mt-1 text-sm text-gray-700 border-l-4 border-green-300 pl-3"></span>
+                <div class="mt-1 text-sm text-gray-700">
+                    Tahap saat ini:
+                    @if($po->production_substatus)
+                        @php
+                            $colorClass = str_starts_with($po->production_substatus, 'SELESAI_')
+                                ? 'bg-green-100 text-green-700'
+                                : (str_starts_with($po->production_substatus, 'PROSES_')
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-gray-100 text-gray-700');
+                        @endphp
+                        <span class="font-medium text-xs px-2 py-1 rounded {{ $colorClass }}">
+                            {{ str_replace('_', ' ', $po->production_substatus) }} ({{ $po->production_substatus_at ? $po->production_substatus_at->format('d-m-Y') : '-' }})
+                        </span>
+                    @else
+                        @if($po->production_status !== 'DONE_PRODUCTION')
+                            <span class="px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-800 uppercase">Belum ada substatus</span>
+                        @else
+                            <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800 uppercase">All Done</span>
+                        @endif
+                    @endif
                 </div>
 
                 @if($po->production_status === 'PENDING_PRODUCTION' && $po->production_note)
                     <p class="mt-1 text-gray-700">Catatan Produksi: {{ $po->production_note }}</p>
                 @endif
-                
+
                 @if(in_array($po->production_status, ['QUEUE_PRODUCTION', 'IN_PRODUCTION', 'PENDING_PRODUCTION']))
-                    <button type="button" id="edit_production_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status Produksi</button>
+                    <button type="button" id="edit_production_status_btn"
+                            class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                        Edit Status Produksi
+                    </button>
                 @endif
             </div>
         @endif
 
-        {{-- Form update status produksi --}}
-        <form action="{{ route('purchase-orders.production.update', $po) }}" method="POST" class="bg-white p-4 rounded shadow-md" id="production_form" style="{{ $po->production_status ? 'display:none;' : '' }}">
+        {{-- Form update --}}
+        <form action="{{ route('purchase-orders.production.status', $po) }}"
+            method="POST"
+            class="bg-white p-4 rounded shadow-md"
+            id="production_form"
+            style="{{ $po->production_status ? 'display:none;' : '' }}">
             @csrf
 
             <div class="mb-4">
                 <label for="production_status" class="block font-medium text-gray-700">Status Produksi</label>
-                <select name="production_status" id="production_status" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
+                <select name="production_status" id="production_status"
+                        class="mt-1 block w-full border-gray-300 rounded shadow-sm">
                     <option value="">-- Pilih Status --</option>
                     <option value="QUEUE_PRODUCTION" {{ old('production_status', $po->production_status) == 'QUEUE_PRODUCTION' ? 'selected' : '' }}>Queue Produksi</option>
                     <option value="PENDING_PRODUCTION" {{ old('production_status', $po->production_status) == 'PENDING_PRODUCTION' ? 'selected' : '' }}>Pending Produksi</option>
@@ -418,7 +469,7 @@
                 @error('production_status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             </div>
 
-            {{-- Sub-status visual hanya muncul jika IN_PRODUCTION --}}
+            {{-- Sub-status --}}
             <div id="sub_production_container" class="mb-4" style="display:none;">
                 <label class="block font-medium text-gray-700">Sub Status Produksi</label>
                 <select id="sub_production_status" class="mt-1 block w-full border-gray-300 rounded shadow-sm">
@@ -430,19 +481,24 @@
                     <option value="PROSES_JAHIT">Proses Jahit</option>
                     <option value="SELESAI_JAHIT">Selesai Jahit</option>
                 </select>
-                <p id="substatus_timestamp" class="text-xs text-gray-600 mt-2 hidden"></p>
+                <input type="hidden" name="production_substatus" id="production_substatus_input">
             </div>
 
             {{-- Catatan produksi --}}
             <div id="production_note_container" class="mb-4" style="display:none;">
                 <label for="production_note" class="block font-medium text-gray-700">Catatan Produksi</label>
-                <textarea name="production_note" id="production_note" rows="3" class="mt-1 block w-full border-gray-300 rounded">{{ old('production_note', $po->production_note) }}</textarea>
-                @error('production_note') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                <textarea name="production_note" id="production_note" rows="3"
+                        class="mt-1 block w-full border-gray-300 rounded">{{ old('production_note', $po->production_note) }}</textarea>
             </div>
 
             <div class="flex gap-2">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update Status Produksi</button>
-                <button type="button" id="cancel_production_btn" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Batal</button>
+                <button type="submit" id="update_production_btn" data-po-id="{{ $po->id }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Update Status Produksi
+                </button>
+                <button type="button" id="cancel_production_btn"
+                        class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                    Batal
+                </button>
             </div>
         </form>
     </div>
@@ -453,103 +509,41 @@
         const noteContainer = document.getElementById('production_note_container');
         const subContainer = document.getElementById('sub_production_container');
         const subSelect = document.getElementById('sub_production_status');
-        const subTimestamp = document.getElementById('substatus_timestamp');
+        const hiddenInput = document.getElementById('production_substatus_input');
         const editBtn = document.getElementById('edit_production_status_btn');
         const cancelBtn = document.getElementById('cancel_production_btn');
         const productionForm = document.getElementById('production_form');
-        const visualDisplay = document.getElementById('visual_substatus_display');
+        const updateBtn = document.getElementById('update_production_btn'); // pastikan tombol update punya ID ini
 
-        function toggleNoteAndSub() {
+        // ✅ Fungsi untuk menampilkan atau menyembunyikan container
+        function toggleContainers() {
             noteContainer.style.display = (productionSelect.value === 'PENDING_PRODUCTION') ? 'block' : 'none';
             subContainer.style.display = (productionSelect.value === 'IN_PRODUCTION') ? 'block' : 'none';
         }
 
-        // Simpan visual substatus dan timestamp di memori browser (bukan DB)
-        let currentSubStatus = null;
-        let currentTimestamp = null;
+        productionSelect.addEventListener('change', toggleContainers);
+        subSelect.addEventListener('change', () => hiddenInput.value = subSelect.value);
 
-        toggleNoteAndSub();
-        productionSelect.addEventListener('change', toggleNoteAndSub);
-
-        if(editBtn) {
-            editBtn.addEventListener('click', function() {
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
                 productionForm.style.display = 'block';
                 editBtn.parentElement.style.display = 'none';
             });
         }
 
-        if(cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
                 productionForm.style.display = 'none';
-                if(editBtn) {
-                    editBtn.parentElement.style.display = 'block';
-                }
+                if (editBtn) editBtn.parentElement.style.display = 'block';
             });
         }
 
-        const poKey = 'substatus_po_{{ $po->id }}';
-
-        function formatSubstatus(text) {
-            return text
-                .toLowerCase()
-                .split('_')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-        }
-
-        function getSubstatusColor(substatus) {
-            if (substatus.startsWith('SELESAI_')) {
-                return 'bg-green-100 text-green-700';
-            } else if (substatus.startsWith('PROSES_')) {
-                return 'bg-yellow-100 text-yellow-700';
-            }
-            return 'bg-gray-100 text-gray-700';
-        }
-
-        // Saat memilih sub status
-        subSelect.addEventListener('change', function() {
-            const selected = subSelect.value;
-            if (selected.startsWith('SELESAI_')) {
-                const now = new Date();
-                const formatted = now.toLocaleString('id-ID');
-                subTimestamp.textContent = `Selesai pada: ${formatted}`;
-                subTimestamp.classList.remove('hidden');
-                currentTimestamp = formatted;
-            } else {
-                subTimestamp.classList.add('hidden');
-                currentTimestamp = null;
-            }
-            currentSubStatus = selected;
-
-            const colorClass = getSubstatusColor(selected);
-            const displayText = selected 
-                ? `<span class="font-medium text-xs px-2 py-1 rounded ${colorClass}">${formatSubstatus(selected)}</span>` + 
-                (currentTimestamp ? ` <span class="text-xs text-gray-500">(${currentTimestamp})</span>` : '')
-                : '';
-
-            visualDisplay.innerHTML = displayText;
-
-            // Simpan ke localStorage agar muncul di list
-            localStorage.setItem(poKey, JSON.stringify({
-                substatus: selected,
-                timestamp: currentTimestamp
-            }));
-        });
-
-        // Saat halaman dimuat, tampilkan dari localStorage
-        const stored = localStorage.getItem(poKey);
-        if (stored) {
-            const { substatus, timestamp } = JSON.parse(stored);
-            if (substatus) {
-                const colorClass = getSubstatusColor(substatus);
-                visualDisplay.innerHTML = `<span class="font-medium text-xs px-2 py-1 rounded ${colorClass}">${formatSubstatus(substatus)}</span>` +
-                    (timestamp ? ` <span class="text-xs text-gray-500">(${timestamp})</span>` : '');
-            }
-        }
+        toggleContainers();
 
     });
     </script>
     @endcan
+
     <!-- END PRODUCTION SELECT ACTIONS -->
 
     <!-- SHIPPING SELECT ACTION -->

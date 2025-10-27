@@ -526,54 +526,29 @@ class PurchaseOrderController extends Controller
 
     public function updateProductionStatus(Request $request, PurchaseOrder $po)
     {
-        $this->authorize('production-actions', $po); // hanya PRODUKSI
+        $this->authorize('production-actions', $po); // hanya role PRODUKSI
 
-        $request->validate([
+        // Validasi input
+        $validated = $request->validate([
+            'no_invoice' => 'nullable|string|max:255',
             'production_status' => 'required|string|in:QUEUE_PRODUCTION,PENDING_PRODUCTION,IN_PRODUCTION,DONE_PRODUCTION',
+            'production_substatus' => 'nullable|string',
             'production_note' => 'nullable|string',
         ]);
 
-        // Simpan
-        $po->update([
-            'production_status' => $request->input('production_status'),
-            'production_note' => $request->input('production_status') === 'PENDING_PRODUCTION'
-                ? $request->input('production_note')
-                : null, // hanya simpan note jika status pending
-        ]);
-
-        if ($request->input('production_status') === 'DONE_PRODUCTION') {
-            // otomatis set status READY_TO_SHIP untuk SHIPPER
-            $po->update([
-                'production_status' => 'DONE_PRODUCTION',
-                'ready_to_ship_status' => 'READY_TO_SHIP' // bisa pakai kolom terpisah atau sama production_status jika mau
-            ]);
-        }
-
-        return redirect()->route('purchase-orders.show', $po)
-                        ->with('success', 'Status Produksi berhasil diupdate.');
-    }
-
-    // -----------------------
-    // UPDATE SHIPPING STATUS (SHIPPER ONLY)
-    // -----------------------
-    public function updateShippingStatus(Request $request, PurchaseOrder $po)
-    {
-        $this->authorize('shipping-actions'); // hanya SHIPPER
-
-        $validated = $request->validate([
-            'shipping_status' => 'required|string|in:READY_TO_SHIP,SHIPPED',
-            'no_invoice' => 'nullable|string|max:255',
-            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date|after_or_equal:today',
-            'alamat_pengiriman' => 'required_if:shipping_status,SHIPPED|string',
-        ]);
-
-        // Default data
+        // Default data update
         $data = [
-            'shipping_status' => $validated['shipping_status'],
+            'no_invoice' => $validated['no_invoice'] ?? $po->no_invoice,
+            'production_status' => $validated['production_status'] ?? $po->production_status,
+            'production_substatus' => $validated['production_substatus'] ?? null,
+            'production_substatus_at' => now(),
+            'production_note' => $validated['production_status'] === 'PENDING_PRODUCTION'
+                ? $validated['production_note']
+                : null, // hanya simpan note jika status pending
         ];
 
-        // Jika status SHIPPED → generate invoice kalau belum ada
-        if ($validated['shipping_status'] === 'SHIPPED') {
+        // Jika status DONE_PRODUCTION → generate invoice jika belum ada
+        if ($validated['production_status'] === 'DONE_PRODUCTION') {
             if (!$po->no_invoice) {
                 $lastPoWithInvoice = PurchaseOrder::whereNotNull('no_invoice')
                     ->latest('id')
@@ -591,9 +566,51 @@ class PurchaseOrderController extends Controller
 
                 $data['no_invoice'] = $no_invoice;
             } else {
-                $data['no_invoice'] = $po->no_invoice; // jangan overwrite
+                $data['no_invoice'] = $po->no_invoice;
             }
+        }
 
+        // Simpan perubahan PO
+        $po->update($data);
+
+        // Catat log perubahan substatus (jika ada)
+        if (!empty($validated['production_substatus'])) {
+            PurchaseOrderLog::create([
+                'purchase_order_id' => $po->id,
+                'action' => 'update_substatus',
+                'details' => "Substatus updated to {$validated['production_substatus']}",
+                'user_id' => auth()->id(),
+            ]);
+        }
+
+        // Jika status DONE_PRODUCTION → otomatis READY_TO_SHIP
+        if ($validated['production_status'] === 'DONE_PRODUCTION') {
+            $po->update([
+                'production_status' => 'DONE_PRODUCTION',
+                'ready_to_ship_status' => 'READY_TO_SHIP'
+            ]);
+        }
+
+        return redirect()
+            ->route('purchase-orders.show', $po)
+            ->with('success', 'Status Produksi berhasil diupdate.');
+    }
+
+    // -----------------------
+    // UPDATE SHIPPING STATUS (SHIPPER ONLY)
+    // -----------------------
+    public function updateShippingStatus(Request $request, PurchaseOrder $po)
+    {
+        $this->authorize('shipping-actions'); // hanya SHIPPER
+
+        $validated = $request->validate([
+            'shipping_status' => 'required|string|in:READY_TO_SHIP,SHIPPED',
+            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date|after_or_equal:today',
+            'alamat_pengiriman' => 'required_if:shipping_status,SHIPPED|string',
+        ]);
+
+        // Jika status SHIPPED → generate invoice kalau belum ada
+        if ($validated['shipping_status'] === 'SHIPPED') {
             $data['tanggal_kirim'] = $validated['tanggal_kirim'];
             $data['alamat_pengiriman'] = $validated['alamat_pengiriman'];
         }
@@ -603,38 +620,6 @@ class PurchaseOrderController extends Controller
         return redirect()->route('purchase-orders.show', $po)
             ->with('success', 'Status pengiriman berhasil diupdate.');
     }
-
-    // -----------------------
-    // EXPORT PDF
-    // -----------------------
-    // public function exportPdf(PurchaseOrder $po)
-    // {
-    //     $user = auth()->user();
-
-    //     if ($user->hasRole('MARKETING')) {
-    //         $view = 'pdf.marketing';
-    //         $prefix = 'MARKETING';
-    //     } elseif ($user->hasRole('FINANCE')) {
-    //         $view = 'pdf.finance';
-    //         $prefix = 'FINANCE';
-    //     } elseif ($user->hasRole('PRODUKSI')) {
-    //         $view = 'pdf.produksi';
-    //         $prefix = 'PRODUKSI';
-    //     } elseif ($user->hasRole('SHIPPER')) {
-    //         $view = 'pdf.shipper';
-    //         $prefix = 'SHIPPER';
-    //     } else {
-    //         $view = 'pdf.default';
-    //         $prefix = 'PO';
-    //     }
-
-    //     $pdf = \PDF::loadView($view, compact('po', 'user'))
-    //         ->setPaper('A4', 'landscape');
-        
-    //     $filename = $prefix . "-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
-
-    //     return $pdf->download($filename);
-    // }
 
     public function invoiceCustomer(PurchaseOrder $po)
     {
@@ -684,6 +669,24 @@ class PurchaseOrderController extends Controller
             ->setPaper('A4', 'landscape');
 
         $filename = "CUSTOMER-ORDER-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
+
+        return $pdf->download($filename);
+    }
+
+    public function CustomerShippingInvoice(PurchaseOrder $po)
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('SHIPPER')) {
+            $view = 'pdf.shipper';
+        } else {
+            $view = 'pdf.default';
+        }
+
+        $pdf = \PDF::loadView($view, compact('po', 'user'))
+            ->setPaper('A4', 'landscape');
+
+        $filename = "INVOICE-SHIPPING-" . str_replace(['/', '.', '\\'], '-', $po->no_spk) . ".pdf";
 
         return $pdf->download($filename);
     }

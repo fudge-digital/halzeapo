@@ -47,7 +47,9 @@ Route::middleware(['auth'])->group(function () {
     // custom actions
     Route::post('purchase-orders/{po}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
     Route::post('purchase-orders/{po}/reject', [PurchaseOrderController::class, 'reject'])->name('purchase-orders.reject');
-    Route::post('purchase-orders/{po}/production', [PurchaseOrderController::class, 'updateProductionStatus'])->name('purchase-orders.production.update')->middleware('can:production-actions');
+    Route::post('/purchase-orders/{po}/production-status', [PurchaseOrderController::class, 'updateProductionStatus'])
+    ->name('purchase-orders.production.status')
+    ->middleware('can:production-actions');
 
     // finance update & upload bukti transfer
     Route::post('purchase-orders/{po}/finance-update', [PurchaseOrderController::class, 'updateFinanceStatus'])->name('purchase-orders.finance.update')->middleware('can:finance-actions');
@@ -62,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/purchase-orders/{po}/invoice-customer', [PurchaseOrderController::class, 'invoiceCustomer'])->name('purchase-orders.invoice.customer');
     Route::get('/purchase-orders/{po}/customer-order', [PurchaseOrderController::class, 'CustomerOrder'])->name('purchase-orders.customer.order');
     Route::get('/purchase-orders/{po}/order-produksi', [PurchaseOrderController::class, 'OrderProduksi'])->name('purchase-orders.order.produksi');
+    Route::get('/purchase-orders/{po}/invoice-shipping', [PurchaseOrderController::class, 'CustomerShippingInvoice'])->name('purchase-orders.invoice.shipping');
 
     Route::get('/purchase-order-logs', [PurchaseOrderController::class, 'logs'])->name('purchase_orders.logs');
 
