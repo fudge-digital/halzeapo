@@ -64,6 +64,20 @@
                                     @endif">
                                     {{ str_replace('_',' ',$po->production_status) ?? '-' }}
                                 </span>
+                                <p class="mt-2">
+                                    @if($po->production_substatus)
+                                        @php
+                                            $colorClass = str_starts_with($po->production_substatus, 'SELESAI_')
+                                                ? 'bg-green-100 text-green-700'
+                                                : (str_starts_with($po->production_substatus, 'PROSES_')
+                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                    : 'bg-gray-100 text-gray-700');
+                                        @endphp
+                                        <span class="px-2 py-1 rounded-lg text-xs font-medium {{ $colorClass }}">
+                                            {{ str_replace('_', ' ', $po->production_substatus) }}
+                                        </span>
+                                    @endif
+                                </p>
                             @else
                                 <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700">
                                     Menunggu
