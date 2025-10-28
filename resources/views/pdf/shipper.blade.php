@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Shipped - {{ $po->no_spk }}</title>
+    <title>Shipped - {{ $po->no_invoice }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
         .header { font-size: 16px; font-weight: bold; margin-bottom: 20px; text-align:left; }
@@ -14,12 +14,13 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('storage/images/HALZEA-LOGO.png') }}" alt="Logo" class="logo">
+        <img src="{{ public_path('storage/images/LogoHalz-Small.png') }}" alt="Logo" class="logo">
     </div>
 
     <p><strong>No Invoice:</strong> {{ $po->no_invoice ?? '-' }}</p>
     <p><strong>Customer:</strong> {{ $po->customer }}</p>
     <p><strong>Tanggal Kirim:</strong> {{ optional($po->tanggal_kirim)->format('d-m-Y') ?? '-' }}</p>
+    <p></p>
 
     <table>
         <colgroup>

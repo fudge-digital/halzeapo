@@ -37,7 +37,7 @@
                 Generate Production Invoice
             </a>
             @endif
-            @if(Auth::user()->role === 'SHIPPER' && $po->shipping_status === 'READY_TO_SHIP')
+            @if(Auth::user()->role === 'SHIPPER' && $po->shipping_status !== 'READY_TO_SHIP')
             <a href="{{ route('purchase-orders.invoice.shipping', $po) }}" class="text-xs px-4 py-2 font-medium bg-green-600 text-white rounded hover:bg-green-700">
                 Generate Shipping Invoice
             </a>
@@ -104,7 +104,7 @@
                         @endif
                     </span>
                 </div>
-                @if($po->production_status === 'DONE_PRODUCTION')
+
                 <div class="mt-2">
                     <span>Status Shipping: </span>
                     <span class="px-3 py-1 rounded-full text-xs font-semibold
@@ -115,7 +115,7 @@
                         {{ str_replace('_',' ', $po->shipping_status) ?? 'N/A' }}
                     </span>
                 </div>
-                @endif
+
             </div>
         </div>
 
@@ -558,7 +558,7 @@
                     </span>
                 </p>
                 <p class="font-bold mb-1">No Invoice: <span class="font-normal">{{ $po->no_invoice ?? 'N/A' }}</span></p>
-                <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim ? $po->tanggal_kirim->format('d M Y H:i') : '-' }}</span></p>
+                <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim ? $po->tanggal_kirim->format('d-m-Y') : '-' }}</span></p>
                 <!-- <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal">{{ $po->alamat_pengiriman ?? 'N/A' }}</span></p> -->
 
                 {{-- tombol edit hanya muncul kalau belum ada no_invoice --}}
