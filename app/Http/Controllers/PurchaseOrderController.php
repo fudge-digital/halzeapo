@@ -617,6 +617,7 @@ class PurchaseOrderController extends Controller
         if ($validated['shipping_status'] === 'SHIPPED') {
             $data['tanggal_kirim'] = $validated['tanggal_kirim'];
             $data['alamat_pengiriman'] = $validated['alamat_pengiriman'];
+            $data['shipping_status'] = $validated['shipping_status'];
         }
 
         $po->update($data);

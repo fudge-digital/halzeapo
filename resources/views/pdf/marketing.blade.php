@@ -14,7 +14,7 @@
 </head>
 <body>
     <div class="header">
-        <img src="{{ public_path('storage/images/HALZEA-LOGO.png') }}" alt="Logo" class="logo">
+        <img src="{{ public_path('storage/images/LogoHalz-Small.png') }}" alt="Logo" class="logo">
         <br>
         Finance Invoice
     </div>
