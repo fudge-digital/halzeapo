@@ -17,14 +17,9 @@
         <img src="{{ public_path('storage/images/HALZEA-LOGO.png') }}" alt="Logo" class="logo">
     </div>
 
-    <p><strong>No SPK:</strong> {{ $po->no_spk ?? '-' }}</p>
     <p><strong>No Invoice:</strong> {{ $po->no_invoice ?? '-' }}</p>
-    <p><strong>Status Pengiriman:</strong> {{ str_replace('_', ' ', $po->shipping_status) ?? '-' }}</p>
+    <p><strong>Customer:</strong> {{ $po->customer }}</p>
     <p><strong>Tanggal Kirim:</strong> {{ optional($po->tanggal_kirim)->format('d-m-Y') ?? '-' }}</p>
-    <p><strong>Alamat Pengiriman:</strong> {{ $po->alamat_pengiriman ?? '-' }}</p>
-
-    <p style="text-align:right;"><strong>Customer:</strong> {{ $po->customer }}</p>
-    <p style="text-align:right;"><strong>Tempat Produksi:</strong> {{ $po->tempat_produksi ?? 'N/A' }}</p>
 
     <table>
         <colgroup>
