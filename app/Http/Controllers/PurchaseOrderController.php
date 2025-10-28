@@ -495,6 +495,10 @@ class PurchaseOrderController extends Controller
 
         $po->status = $request->status;
 
+        if ($data['status'] === 'APPROVED_FINANCE' && !$po->approved_at) {
+            $data['approved_at'] = now();
+        }
+
         if ($request->status === 'APPROVED_FINANCE' && $request->hasFile('bukti_transfer')) {
             $file = $request->file('bukti_transfer');
             $filename = time() . '_' . $file->getClientOriginalName();
