@@ -41,10 +41,10 @@
                 @forelse ($pos as $po)
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-4 py-3">{{ $po->create ?? $po->created_at->format('d-m-Y') }}</td>
-                        <td class="px-4 py-3 font-medium text-gray-800">{{ $po->customer }}</td>
+                        <td class="px-4 py-3 font-medium text-gray-800">{{ $po->customer ?? 'N/A' }}</td>
                         <td class="px-4 py-3">{{ $po->tempat_produksi ?? 'N/A' }}</td>
-                        <td class="px-4 py-3">{{ $po->no_spk ?? '-' }}</td>
-                        <td class="px-4 py-3">{{ $po->creator->name }}</td>
+                        <td class="px-4 py-3">{{ $po->no_spk ?? 'N/A' }}</td>
+                        <td class="px-4 py-3">{{ $po->creator->name ?? 'N/A'}}</td>
                         <td class="px-4 py-3">
                             <span class="px-2 py-1 rounded-lg text-xs font-medium
                                 @if($po->status === 'PENDING_FINANCE') bg-yellow-100 text-yellow-700
@@ -177,6 +177,9 @@
             });
         </script>
 
+    </div>
+    <div class="mt-4">
+        {{ $pos->links() }}
     </div>
 </div>
 @endsection
