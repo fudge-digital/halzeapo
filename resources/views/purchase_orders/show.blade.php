@@ -125,12 +125,6 @@
                 <p class="text-gray-500">Tanggal Dibuat</p>
                 <p class="font-medium">{{ $po->created_at ? $po->created_at->format('d M Y H:i') : '-' }}</p>
             </div>
-            @if($po->status === 'APPROVED_FINANCE' && in_array(Auth::user()->role, ['PRODUKSI', 'SHIPPER', 'MARKETING']))
-            <div>
-                <p class="text-gray-500">Tanggal diedit</p>
-                <p class="font-medium">{{ $po->updated_at ? $po->updated_at->format('d M Y H:i') : '-' }}</p>
-            </div>
-            @endif
         </div>
 
         <!-- Items -->
@@ -295,7 +289,7 @@
     <div class="bg-white shadow rounded-xl p-6 border mt-6">
         {{-- Card status saat ini --}}
         @if($po->status)
-            <div class="flex mb-4 p-4 bg-gray-100 rounded border shadow-sm">
+            <div class="mb-4 p-4 bg-gray-100 rounded border shadow-sm">
                 <div>
                     <p class="font-medium">Status saat ini: 
                         <span class="font-bold text-sm bg-green-100 text-green-800 p-2 rounded">
@@ -312,9 +306,15 @@
                         </p>
                     @endif
                 </div>
-                <div class="ml-auto">
-                    <button type="button" id="edit_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status</button>
-                </div>
+                @if(in_array($po->status_production, ['IN_PRODUCTION', 'DONE_PRODUCTION']))
+                    <div class="ml-auto">
+                        <button type="button" id="edit_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status</button>
+                    </div>
+                @else
+                    <div class="ml-auto">
+                        <p class="text-xs text-red-500 mt-1">Status hanya dapat diubah sebelum produksi dimulai.</p>
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -551,7 +551,7 @@
     <div class="mt-6">
         {{-- Card status shipping --}}
         @if($po->shipping_status)
-            <div class="mb-4 p-4 bg-gray-100 rounded border shadow-sm text-md" id="shipping_card">
+            <div class="mb-4 p-4 bg-white rounded-xl border shadow-sm text-md" id="shipping_card">
                 <p class="font-bold mb-1">Status Pengiriman saat ini: 
                     <span class="font-bold text-sm p-1 bg-green-100 text-green-800">
                         {{ str_replace('_', ' ', $po->shipping_status) ?? 'N/A' }}
@@ -559,7 +559,7 @@
                 </p>
                 <p class="font-bold mb-1">No Invoice: <span class="font-normal">{{ $po->no_invoice ?? 'N/A' }}</span></p>
                 <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim ? $po->tanggal_kirim->format('d-m-Y') : '-' }}</span></p>
-                <!-- <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal">{{ $po->alamat_pengiriman ?? 'N/A' }}</span></p> -->
+                <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal"><p>{{ $po->alamat_pengiriman ?? 'N/A' }}</p></span></p>
 
                 {{-- tombol edit hanya muncul kalau belum ada no_invoice --}}
                 @if($po->shipping_status !== 'SHIPPED')
@@ -567,6 +567,8 @@
                     class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                     Edit Status Pengiriman
                 </button>
+                @else
+                <p class="text-sm text-gray-500 mt-2">Pengiriman telah selesai dan tidak dapat diubah.</p>
                 @endif
             </div>
         @endif
@@ -595,12 +597,20 @@
                         class="mt-1 block w-full border-gray-300 rounded bg-gray-100 text-gray-700" 
                         value="{{ old('no_invoice', $po->no_invoice) }}" readonly>
                 </div>
+                @php
+                    $user = Auth::user();
+                    $defaultTanggal = match ($user->role) {
+                        'SHIPPER' => $po->updated_at,
+                        default => now(),
+                    };
+                @endphp
                 <div class="mb-4" id="tanggal_kirim_wrapper">
                     <label for="tanggal_kirim" class="block font-medium text-gray-700">Tanggal Kirim</label>
                     <input type="date" name="tanggal_kirim" id="tanggal_kirim" 
-                        min="{{ now()->toDateString() }}" 
+                        min="now()->startOfYear()->toDateString()"
+                        max="{{ now()->endOfYear()->toDateString() }}" 
                         class="mt-1 block w-full border-gray-300 rounded" 
-                        value="{{ old('tanggal_kirim', $po->tanggal_kirim) }}">
+                        value="{{ old('tanggal_kirim', $defaultTanggal->toDateString()) }}">
                 </div>
                 <div class="mb-4" id="alamat_pengiriman_wrapper">
                     <label for="alamat_pengiriman" class="block font-medium text-gray-700">Alamat Pengiriman</label>
@@ -664,6 +674,31 @@
         });
         </script>
     @endcan
+
+    <div class="items-top justify-between bg-white shadow rounded-xl p-6 border mt-6">
+        <p class="font-bold mb-1">Status Info: <span class="font-normal">
+            <ul class="list-disc ml-5 text-sm text-gray-700">
+                {!! str_replace('<br>', '</li><li>', '<li>' . poStatusInfo($po) . '</li>') !!}
+            </ul>  
+        </p>
+    </div>
+
+    @if(in_array($po->shipping_status, ['SHIPPED','READY_TO_SHIP']) && in_array(Auth::user()->role, ['FINANCE','MARKETING','PRODUKSI']))
+    <div class="mt-6 mb-4 p-4 bg-white rounded-xl border shadow-sm text-md" id="shipping_card">
+        <p class="font-bold mb-1">Status Pengiriman saat ini: 
+            <span class="font-bold text-sm p-1 bg-green-100 text-green-800">
+                {{ str_replace('_', ' ', $po->shipping_status) ?? 'N/A' }}
+            </span>
+        </p>
+        <p class="font-bold mb-1">No Invoice: <span class="font-normal">{{ $po->no_invoice ?? 'N/A' }}</span></p>
+        <p class="font-bold mb-1">Tanggal Kirim: <span class="font-normal">{{ $po->tanggal_kirim ? $po->tanggal_kirim->format('d-m-Y') : '-' }}</span></p>
+        <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal"><p>{{ $po->alamat_pengiriman ?? 'N/A' }}</p></span></p>
+    </div>
+    @endif
+
+    <div>
+        {!! wa_notification_button($po) !!}
+    </div>
 
 </div>
 @endsection

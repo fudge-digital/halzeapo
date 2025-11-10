@@ -68,6 +68,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/purchase-order-logs', [PurchaseOrderController::class, 'logs'])->name('purchase_orders.logs');
 
+    Route::get('/test-helper', function() {
+        return wa_notification_button(\App\Models\PurchaseOrder::first());
+    });
+
 });
 
 // default auth scaffolding (Breeze/Jetstream)

@@ -67,7 +67,6 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id')->distinct();
     }
 
-    //
     public function creator() {
         return $this->belongsTo(\App\Models\User::class, 'created_by');
     }

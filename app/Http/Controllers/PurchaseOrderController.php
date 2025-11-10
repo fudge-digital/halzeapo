@@ -23,13 +23,32 @@ class PurchaseOrderController extends Controller
     {
         $user = Auth::user();
 
-        // contoh: marketing sees own, finance sees all, produksi sees approved
         if ($user->role === 'MARKETING') {
-            $pos = PurchaseOrder::with('items')->where('created_by', $user->id)->latest()->paginate(10);
-        } elseif (in_array($user->role, ['PRODUKSI', 'SHIPPER'])) {
-            $pos = PurchaseOrder::with('items')->where('status', PurchaseOrder::STATUS_APPROVED)->latest()->paginate(10);
+            // Marketing hanya melihat PO yang dia buat sendiri
+            $pos = PurchaseOrder::with('items')
+                ->where('created_by', $user->id)
+                ->latest()
+                ->paginate(10);
+
+        } elseif ($user->role === 'PRODUKSI') {
+            // Produksi hanya melihat PO yang sudah di-approve finance
+            $pos = PurchaseOrder::with('items')
+                ->where('status', PurchaseOrder::STATUS_APPROVED)
+                ->latest()
+                ->paginate(10);
+
+        } elseif ($user->role === 'SHIPPER') {
+            // Shipper hanya melihat PO yang sudah selesai diproduksi
+            $pos = PurchaseOrder::with('items')
+                ->where('production_status', 'DONE_PRODUCTION')
+                ->latest()
+                ->paginate(10);
+
         } else {
-            $pos = PurchaseOrder::with('items')->latest()->paginate(10);
+            // Role lain (misal admin, finance, dsb) bisa melihat semua
+            $pos = PurchaseOrder::with('items')
+                ->latest()
+                ->paginate(10);
         }
 
         return view('purchase_orders.index', compact('pos'));
@@ -485,6 +504,7 @@ class PurchaseOrderController extends Controller
     // -----------------------
     public function updateFinanceStatus(Request $request, PurchaseOrder $po)
     {
+        $user = Auth::user();
         $this->authorize('finance-actions');
 
         $request->validate([
@@ -519,6 +539,8 @@ class PurchaseOrderController extends Controller
             $po->bukti_transfer = null;
         }
 
+        $po->approved_by = $user->id;
+
         $po->save();
 
         return redirect()->back()->with('success', 'Status finance berhasil diperbarui.');
@@ -530,6 +552,7 @@ class PurchaseOrderController extends Controller
 
     public function updateProductionStatus(Request $request, PurchaseOrder $po)
     {
+        $user = Auth::user();
         $this->authorize('production-actions', $po); // hanya role PRODUKSI
 
         // Validasi input
@@ -574,6 +597,8 @@ class PurchaseOrderController extends Controller
             }
         }
 
+        $po->produced_by = $user->id;
+
         // Simpan perubahan PO
         $po->update($data);
 
@@ -605,13 +630,19 @@ class PurchaseOrderController extends Controller
     // -----------------------
     public function updateShippingStatus(Request $request, PurchaseOrder $po)
     {
+        $user = Auth::user();
         $this->authorize('shipping-actions'); // hanya SHIPPER
 
         $validated = $request->validate([
             'shipping_status' => 'required|string|in:READY_TO_SHIP,SHIPPED',
-            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date|after_or_equal:today',
+            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date',
             'alamat_pengiriman' => 'required_if:shipping_status,SHIPPED|string',
+            'shipped_by' => 'nullable|integer',
         ]);
+
+        $data = [
+            'shipped_by' => $user->id, // 🚀 isi otomatis siapa shipper-nya
+        ];
 
         // Jika status SHIPPED → generate invoice kalau belum ada
         if ($validated['shipping_status'] === 'SHIPPED') {
