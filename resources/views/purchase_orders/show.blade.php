@@ -306,13 +306,13 @@
                         </p>
                     @endif
                 </div>
-                @if(in_array($po->status_production, ['IN_PRODUCTION', 'DONE_PRODUCTION']))
+                @if($po->production_status === 'QUEUE_PRODUCTION')
                     <div class="ml-auto">
                         <button type="button" id="edit_status_btn" class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Edit Status</button>
                     </div>
                 @else
                     <div class="ml-auto">
-                        <p class="text-xs text-red-500 mt-1">Status hanya dapat diubah sebelum produksi dimulai.</p>
+                        <p class="text-xs text-red-500 mt-1">Produksi sudah dimulai, Status hanya dapat diubah sebelum produksi dimulai.</p>
                     </div>
                 @endif
             </div>
