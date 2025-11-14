@@ -291,9 +291,18 @@
         @if($po->status)
             <div class="mb-4 p-4 bg-gray-100 rounded border shadow-sm">
                 <div>
+                    @php
+                        $statusMap = [
+                            'PENDING_FINANCE'   => ['label' => 'Pending Finance', 'class' => 'bg-yellow-100 text-yellow-800'],
+                            'APPROVED_FINANCE'  => ['label' => 'Approved Finance', 'class' => 'bg-green-100 text-green-800'],
+                            'REJECTED_FINANCE'  => ['label' => 'Rejected Finance', 'class' => 'bg-red-100 text-red-800'],
+                        ];
+
+                        $current = $statusMap[$po->status] ?? ['label' => 'N/A', 'class' => 'bg-gray-100 text-gray-800'];
+                    @endphp
                     <p class="font-medium">Status saat ini: 
-                        <span class="font-bold text-sm bg-green-100 text-green-800 p-2 rounded">
-                            {{ str_replace('_',' ',$po->status === 'APPROVED_FINANCE' ? 'Approved Finance' : 'Rejected') ?? 'N/A' }}
+                        <span class="font-bold text-sm p-2 rounded {{ $current['class'] }}">
+                            {{ $current['label'] }}
                         </span>
                     </p>
                     @if($po->status === 'REJECTED' && $po->rejected_note)
