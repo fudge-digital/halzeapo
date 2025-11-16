@@ -80,12 +80,10 @@
                 <th colspan="7" style="text-align: right;">Down Payment</th>
                 <th style="text-align:right;">
                     @if ($po->down_payment_type === 'persen')
-                        @php
-                            $persenDPHPP = $po->total_hpp > 0 
-                                ? round(($po->down_payment / $po->total_hpp) * 100, 2)
-                                : 0;
-                        @endphp
-                        {{ $persenDPHPP }}%
+                        {{ $po->down_payment_percent }} %
+                        <p style="font-size: 10px; color: gray; margin: 0; font-style: italic; font-weight: normal;">
+                            (Rp {{ number_format($po->down_payment, 0, ',', '.') }})
+                        </p>
                     @else
                         Rp {{ number_format($po->down_payment, 0, ',', '.') }}
                     @endif
