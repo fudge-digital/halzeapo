@@ -635,12 +635,13 @@ class PurchaseOrderController extends Controller
 
         $validated = $request->validate([
             'shipping_status' => 'required|string|in:READY_TO_SHIP,SHIPPED',
-            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date',
-            'alamat_pengiriman' => 'required_if:shipping_status,SHIPPED|string',
+            'tanggal_kirim' => 'required_if:shipping_status,SHIPPED|date|nullable',
+            'alamat_pengiriman' => 'required_if:shipping_status,SHIPPED|string|nullable',
             'shipped_by' => 'nullable|integer',
         ]);
 
         $data = [
+            'shipping_status' => $validated['shipping_status'],
             'shipped_by' => $user->id, // 🚀 isi otomatis siapa shipper-nya
         ];
 
@@ -648,7 +649,10 @@ class PurchaseOrderController extends Controller
         if ($validated['shipping_status'] === 'SHIPPED') {
             $data['tanggal_kirim'] = $validated['tanggal_kirim'];
             $data['alamat_pengiriman'] = $validated['alamat_pengiriman'];
-            $data['shipping_status'] = $validated['shipping_status'];
+        } else {
+            // jika kembali ke READY_TO_SHIP, kosongkan tanggal & alamat jika perlu
+            $data['tanggal_kirim'] = null;
+            $data['alamat_pengiriman'] = null;
         }
 
         $po->update($data);

@@ -574,14 +574,11 @@
                 <p class="font-bold mb-1">Alamat Pengiriman: <span class="font-normal"><p>{{ $po->alamat_pengiriman ?? 'N/A' }}</p></span></p>
 
                 {{-- tombol edit hanya muncul kalau belum ada no_invoice --}}
-                @if($po->shipping_status !== 'SHIPPED')
+                
                 <button type="button" id="edit_shipping_status_btn" 
                     class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                     Edit Status Pengiriman
                 </button>
-                @else
-                <p class="text-sm text-gray-500 mt-2">Pengiriman telah selesai dan tidak dapat diubah.</p>
-                @endif
             </div>
         @endif
 
@@ -650,15 +647,37 @@
             //const invoiceField   = document.getElementById("invoice_field");
 
             function toggleFields() {
+                const tanggalWrapper = document.getElementById("tanggal_kirim_wrapper");
+                const alamatWrapper  = document.getElementById("alamat_pengiriman_wrapper");
+
+                // Jika status SHIPPED → tampilkan tanggal & alamat
                 if (statusSelect.value === "SHIPPED") {
                     shippingFields.style.display = "block";
-                    //invoiceField.style.display = "block";
-                } else if (statusSelect.value === "READY_TO_SHIP") {
+                    tanggalWrapper.style.display = "block";
+                    alamatWrapper.style.display = "block";
+                }
+
+                // Jika status READY_TO_SHIP → sembunyikan tanggal & alamat
+                else if (statusSelect.value === "READY_TO_SHIP") {
                     shippingFields.style.display = "block";
-                    //invoiceField.style.display = "none";
-                } else {
+                    tanggalWrapper.style.display = "none";
+                    alamatWrapper.style.display = "none";
+                }
+
+                // Jika tidak pilih apapun
+                else {
                     shippingFields.style.display = "none";
                 }
+                
+                // if (statusSelect.value === "SHIPPED") {
+                //     shippingFields.style.display = "block";
+                //     //invoiceField.style.display = "block";
+                // } else if (statusSelect.value === "READY_TO_SHIP") {
+                //     shippingFields.style.display = "block";
+                //     //invoiceField.style.display = "none";
+                // } else {
+                //     shippingFields.style.display = "none";
+                // }
             }
 
             // klik edit → tampilkan form
