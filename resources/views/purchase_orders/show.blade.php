@@ -436,9 +436,7 @@
                             {{ str_replace('_', ' ', $po->production_substatus) }} ({{ $po->production_substatus_at ? $po->production_substatus_at->format('d-m-Y') : '-' }})
                         </span>
                     @else
-                        @if($po->production_status !== 'DONE_PRODUCTION')
-                            <span class="px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-800 uppercase">Belum ada substatus</span>
-                        @else
+                        @if($po->production_status === 'DONE_PRODUCTION')
                             <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800 uppercase">All Done</span>
                         @endif
                     @endif
@@ -448,12 +446,12 @@
                     <p class="mt-1 text-gray-700">Catatan Produksi: {{ $po->production_note }}</p>
                 @endif
 
-                @if(in_array($po->production_status, ['QUEUE_PRODUCTION', 'IN_PRODUCTION', 'PENDING_PRODUCTION']))
+                <!-- @if(in_array($po->production_status, ['QUEUE_PRODUCTION', 'IN_PRODUCTION', 'PENDING_PRODUCTION']))
                     <button type="button" id="edit_production_status_btn"
                             class="mt-3 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                         Edit Status Produksi
                     </button>
-                @endif
+                @endif -->
             </div>
         @endif
 
@@ -461,8 +459,7 @@
         <form action="{{ route('purchase-orders.production.status', $po) }}"
             method="POST"
             class="bg-white p-4 rounded shadow-md"
-            id="production_form"
-            style="{{ $po->production_status ? 'display:none;' : '' }}">
+            id="production_form">
             @csrf
 
             <div class="mb-4">
@@ -528,6 +525,12 @@
         function toggleContainers() {
             noteContainer.style.display = (productionSelect.value === 'PENDING_PRODUCTION') ? 'block' : 'none';
             subContainer.style.display = (productionSelect.value === 'IN_PRODUCTION') ? 'block' : 'none';
+
+            // Reset substatus jika done production
+            if (productionSelect.value === 'DONE_PRODUCTION') {
+                subSelect.value = "";
+                hiddenInput.value = "";
+            }
         }
 
         productionSelect.addEventListener('change', toggleContainers);
@@ -536,7 +539,7 @@
         if (editBtn) {
             editBtn.addEventListener('click', () => {
                 productionForm.style.display = 'block';
-                editBtn.parentElement.style.display = 'none';
+                //editBtn.parentElement.style.display = 'none';
             });
         }
 
