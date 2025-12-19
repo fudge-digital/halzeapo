@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\PurchaseOrder;
 
 class DashboardController extends Controller
@@ -56,7 +57,52 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        return view('dashboard.index', compact('pos', 'user', 'totalPO', 'pendingPO', 'approvedPO', 'rejectedPO', 'queuedPO', 'inprogPO', 'completedPO', 'readyshipPO', 'shippedPO'));
+        // ================================
+        // GRAFIK 1: JUMLAH PO / BULAN
+        // ================================
+        $poPerBulan = PurchaseOrder::select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
+                DB::raw("COUNT(*) as total")
+            )
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get();
+
+        // ================================
+        // GRAFIK 2: TOTAL SALES / BULAN
+        // ================================
+        $salesPerBulan = PurchaseOrder::select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
+                DB::raw("SUM(total_harga_jual) as total_sales")
+            )
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get();
+
+        // ================================
+        // GRAFIK 3: APPROVED vs PENDING
+        // ================================
+        $statusFinance = PurchaseOrder::select(
+                DB::raw("SUM(status = 'APPROVED_FINANCE') as approved"),
+                DB::raw("SUM(status = 'PENDING_FINANCE') as pending")
+            )->first();
+
+        // ================================
+        // GRAFIK 4: DONE PRODUCTION / BULAN
+        // ================================
+        $doneProductionPerBulan = PurchaseOrder::select(
+                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as bulan"),
+                DB::raw("COUNT(*) as total")
+            )
+            ->where('production_status', 'DONE_PRODUCTION')
+            ->where('created_at', '>=', now()->subMonths(11)->startOfMonth())
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->get();
+
+        return view('dashboard.index', compact('pos', 'user', 'totalPO', 'pendingPO', 'approvedPO', 'rejectedPO', 'queuedPO', 'inprogPO', 'completedPO', 'readyshipPO', 'shippedPO', 'poPerBulan', 'salesPerBulan', 'statusFinance', 'doneProductionPerBulan'));
     
     }
 }
